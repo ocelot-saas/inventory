@@ -1,0 +1,34 @@
+language: python
+
+python:
+- "3.5"
+
+cache: pip
+
+addons:
+  apt:
+    packages:
+    - libpq-dev
+
+install:
+- pip install setuptools
+- pip install coveralls
+- pip install coverage
+- pip install -r requirements.txt
+- python setup.py install
+
+script:
+- coverage run --source=inventory --module unittest discover --verbose
+
+after_success:
+- coveralls
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: bin/togemfury.sh
+- provider: heroku
+  app: ocelot-saas-inventory
+  run: bin/migrate.sh
+  api_key:
+    secure: "YotjVH54sN9XOb/HZ1deeDSq6uDWPjyHOWJgY/gegTTCyvuxLjntrBqZrq6lDXQ9wEyscyKbJxFuYm+cluGR3Ag1nUaWr5Mv3AzpC8vCA6tP06o71+ChnA2iBsHd0rjV6Yxqtkbb/hqcBwHBMXnaOtUgh5tzfA/tXtE8QuB3xV3SHrPy2ME/Kt5htIJihuppNYyPyYUdyIeob64mO2ADUt+Y5adXBmQqmtNOI2o6B7U7NgK6azaLBYHK4HF8BII5d8jsKorSacWNO4KI3lK6Sa2UxtK9jPoV3Uhju8hhKVo2TAXX69iAW4nI7cL53XeYzEpIIw/GqugnvRTadRs0CUoD3DqRK8hqO6hTRNtpDxBCVuoSuSSUgdYwb8MnzdxKEu2cebgxG39cboASn9UpZ+6xWvxoMAo315vX83p9mEVjSszUr4hf996I4AtEzWaaVuXwB2XfXlTw5h2Xe73gua8EUT1jgWWGjBOZExQ6SSTw3igVPQT334ZvCOcRsr2Xvma+OsHR887rYCSCZFdievAqy8f5eaw+3hYRILWnENBO0BBFfMuYYyqZLLKJK8wORfVfnIq/np0f51preKrxYgwjugFPbJy+JV4h8ghv/ztN8h2K+6BVevwgiIuJb6ZmgCg5bEmXuDPgY6M0LtpHA5ChOTRUxyxFGBfQh3XB9+I="
