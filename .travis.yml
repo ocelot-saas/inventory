@@ -11,9 +11,6 @@ addons:
     - libpq-dev
 
 install:
-- pip install setuptools
-- pip install coveralls
-- pip install coverage
 - pip install -r requirements.txt
 - python setup.py install
 
