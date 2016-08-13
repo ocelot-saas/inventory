@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name='inventory',
-    version='0.0.3',
+    version='0.0.4',
     description='The inventory service for Ocelot, as a Python package.',
     long_description=readme(),
     keywords='ocelot inventory service rest api',
@@ -44,7 +44,6 @@ setup(
         'coverage>=4,<5',
         'coveralls>=1,<2',
         'mockito>=0,<1',
-        'setuptools>=25,<26'
     ],
     include_package_data=True,
     zip_safe=False

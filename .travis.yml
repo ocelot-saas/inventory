@@ -21,6 +21,7 @@ env:
   - CLIENTS=null
 
 install:
+- pip install setuptools
 - pip install -r requirements.txt
 - python setup.py install
 

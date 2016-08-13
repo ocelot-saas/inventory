@@ -14,4 +14,3 @@ yoyo-migrations>=5,<6
 coverage>=4,<5
 coveralls>=1,<2
 mockito>=0,<1
-setuptools>=25,<26
