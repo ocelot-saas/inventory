@@ -19,7 +19,7 @@ env:
   - MIGRATIONS_PATH=migrations
   - DATABASE_URL=null
   - CLIENTS=null
-  - PYTHONPATH=$(PYTHONPATH):$TRAVIS_BUILD_DIR/src
+  - PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR/src
 
 install:
 - pip install -r requirements.txt
