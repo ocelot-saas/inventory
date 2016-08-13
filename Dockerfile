@@ -42,7 +42,14 @@ COPY . /ocelot/pack/inventory
 
 # Setup the runtime environment for the application.
 
-ENV ENVIRON LOCAL
+ENV ENV LOCAL
+ENV ADDRESS 0.0.0.0
+ENV PORT 10000
+ENV MIGRATIONS_PATH /ocelot/pack/inventory/migrations
+ENV IDENTITY_SERVICE ocelot-identity:10000
+ENV DATABASE_URL postgresql://ocelot:ocelot@ocelot-postgres:5432/ocelot
+ENV CLIENTS localhost:10000
+ENV PYTHONPATH /ocelot/pack/inventory/src
 
 RUN chown -R ocelot:ocelot /ocelot
 VOLUME ["/ocelot/pack/inventory/src"]

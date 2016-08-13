@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name='inventory',
-    version='0.0.1',
+    version='0.0.2',
     description='The inventory service for Ocelot, as a Python package.',
     long_description=readme(),
     keywords='ocelot inventory service rest api',
@@ -39,7 +39,13 @@ setup(
         'yoyo-migrations>=5,<6'
         ],
     test_suite='tests',
-    tests_require=[],
+    tests_require=[
+        # Duplicated from requirements.txt.
+        'coverage>=4,<5',
+        'coveralls>=1,<2',
+        'mockito>=0,<1',
+        'setuptools>=25,<26'
+    ],
     include_package_data=True,
     zip_safe=False
 )

@@ -10,6 +10,16 @@ addons:
     packages:
     - libpq-dev
 
+env:
+  global:
+  - ENV=TEST
+  - ADDRESS=0.0.0.0
+  - PORT=10000
+  - IDENTITY_SERVICE=null
+  - MIGRATIONS_PATH=migrations
+  - DATABASE_URL=null
+  - CLIENTS=null
+
 install:
 - pip install -r requirements.txt
 - python setup.py install
@@ -28,4 +38,4 @@ deploy:
   app: ocelot-saas-inventory
   run: bin/migrate.sh
   api_key:
-    secure: "YotjVH54sN9XOb/HZ1deeDSq6uDWPjyHOWJgY/gegTTCyvuxLjntrBqZrq6lDXQ9wEyscyKbJxFuYm+cluGR3Ag1nUaWr5Mv3AzpC8vCA6tP06o71+ChnA2iBsHd0rjV6Yxqtkbb/hqcBwHBMXnaOtUgh5tzfA/tXtE8QuB3xV3SHrPy2ME/Kt5htIJihuppNYyPyYUdyIeob64mO2ADUt+Y5adXBmQqmtNOI2o6B7U7NgK6azaLBYHK4HF8BII5d8jsKorSacWNO4KI3lK6Sa2UxtK9jPoV3Uhju8hhKVo2TAXX69iAW4nI7cL53XeYzEpIIw/GqugnvRTadRs0CUoD3DqRK8hqO6hTRNtpDxBCVuoSuSSUgdYwb8MnzdxKEu2cebgxG39cboASn9UpZ+6xWvxoMAo315vX83p9mEVjSszUr4hf996I4AtEzWaaVuXwB2XfXlTw5h2Xe73gua8EUT1jgWWGjBOZExQ6SSTw3igVPQT334ZvCOcRsr2Xvma+OsHR887rYCSCZFdievAqy8f5eaw+3hYRILWnENBO0BBFfMuYYyqZLLKJK8wORfVfnIq/np0f51preKrxYgwjugFPbJy+JV4h8ghv/ztN8h2K+6BVevwgiIuJb6ZmgCg5bEmXuDPgY6M0LtpHA5ChOTRUxyxFGBfQh3XB9+I="
+    secure: "ql8yYWvkIQEgaIelpo03Z68OCIdyxzdU4HkD7G51Z5Z9pbnNV/pBd6N9PK5tGyvVLvAyc12oZ1FbSMkH8wjPLmiB9hHDNq7r6MjIdB5+9QbsZKPumYPHobrMcXzFrp1cSQLTxooq6CT2o/aT/6Q0zGz7MLGRa/qzHrVbCN1BkHlF41TI4JNozcuogtrwhKJ27OWr2/f3yyuYC9h2YPzEHR8un+89Z8cDaKLLlh8pQ6JBt8Vwlp4/zw8htdX4wSPDaQDY+56bPfku9Fpj2gjsjdA7KJ48flavqhaM9ongjMjM2XqKva9khU+dwVgLHLzk9k0n2zK35t6jCAGjr42JFyNqnQ+6QsiaU2tkkh3Hr9jNcr4XU32TAP2101dpszpeSJkZCn6b1PufxkXcJva0SIdNFpP9oRrZ9qSu1O1SBji++duoiP7D5RQdXKP//SDo79nNJP4hxXGicEolT8Y0cm7J4h5cPH1TZZFFlpSgJzk9s3OmMqna8AHV15VPJJ96ruqlhEj6K+9+BM+xgv5DgFSar9izLg8DsXoY3/ELizcfz8tmOcw4+H3uUVHlsH0vPCAa5oV9IWLhPGjQzj+HRwrSYDYHPuTbQpEHc6U091WEdDpzoT96mXI0av7OUgYgDn5Zz57dQtxHbAUGgnZuJ8gGdF6p2YsUk1LiuPzxfGY="
