@@ -19,11 +19,10 @@ env:
   - MIGRATIONS_PATH=migrations
   - DATABASE_URL=null
   - CLIENTS=null
+  - PYTHONPATH=$(PYTHONPATH):$TRAVIS_BUILD_DIR/src
 
 install:
-- pip install setuptools
 - pip install -r requirements.txt
-- python setup.py install
 
 script:
 - coverage run --source=inventory --module unittest discover --verbose
