@@ -1,7 +1,7 @@
 --extra-index-url https://pypi.fury.io/vsRAKKMwEs5p1RhfMGiF/ocelot-saas/
 
 # Duplicated from setup.py.
-clock==0.0.3
+clock==0.0.5
 falcon>=1,<2
 gunicorn>=19,<20
 jsonschema>=2,<3

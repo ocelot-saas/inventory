@@ -50,7 +50,11 @@ class OrgResource(object):
             org_row = self._fetch_org(conn, user.id)
 
     def on_get(self, req, resp):
-        """Retrieve a particular organization."""
+        """Retrieve a particular organization, with info for the restaurant as well."""
+
+        try:
+            id_token = self._id_token_header_validator.validate(req.auth)
+        except identity.validation.Error:
 
         resp.status = falcon.HTTP_200
         self._cors_response(resp)

@@ -15,6 +15,8 @@ RUN apt-get update -y && \
             libssl-dev && \
     apt-get clean
 
+RUN pip3 install setuptools
+
 # Setup directory structure.
 
 RUN mkdir /ocelot
