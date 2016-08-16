@@ -47,7 +47,7 @@ class OrgResource(object):
 
         resp.status = falcon.HTTP_200
         self._cors_response(resp)
-        resp.body = 'A-OK'
+        resp.body = json.dumps(req.context['user'])
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
