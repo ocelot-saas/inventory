@@ -72,6 +72,34 @@ class OrgResource(object):
     def on_get(self, req, resp):
         """Retrieve a particular organization, with info for the restaurant as well."""
 
+        user = req.context['user']
+
+        with self._sql_engine.begin() as conn:
+            x = """
+SELECT
+  o.id,
+  o.time_created,
+  r.id,
+  r.time_created,
+  r.name,
+  r.description,
+  r.keywords,
+  r.address,
+  r.opening_hours
+FROM
+  inventory.org_user ou
+    JOIN
+      inventory.org o
+    ON
+      ou.org_id = o.id
+    JOIN
+      inventory.restaurant r
+    ON
+      ou.org_id = r.id
+WHERE
+  ou.user_id = @user['id']
+"""
+
         resp.status = falcon.HTTP_200
         self._cors_response(resp)
         resp.body = json.dumps(req.context['user'])
