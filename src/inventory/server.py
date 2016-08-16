@@ -5,19 +5,19 @@ from wsgiref import simple_server
 import falcon
 
 import clock
-# import identity.client as identity
+import identity.client as identity
 import inventory.config as config
 import inventory.handlers as inventory
 import inventory.validation as validation
 import sqlalchemy
 
 
-#auth_middleware = identity.AuthMiddleware()
+auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
 
 # /org
 #   POST creates the general info about the organization and restaurant
 #   GET retrieves general information about the organization and the restaurant
-app = falcon.API()
+app = falcon.API(middleware=[auth_middleware])
 
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)

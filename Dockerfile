@@ -46,7 +46,7 @@ ENV ENV LOCAL
 ENV ADDRESS 0.0.0.0
 ENV PORT 10000
 ENV MIGRATIONS_PATH /ocelot/pack/inventory/migrations
-ENV IDENTITY_SERVICE ocelot-identity:10000
+ENV IDENTITY_SERVICE_DOMAIN ocelot-identity:10000
 ENV DATABASE_URL postgresql://ocelot:ocelot@ocelot-postgres:5432/ocelot
 ENV CLIENTS localhost:10000
 ENV PYTHONPATH /ocelot/pack/inventory/src

@@ -15,7 +15,7 @@ env:
   - ENV=TEST
   - ADDRESS=0.0.0.0
   - PORT=10000
-  - IDENTITY_SERVICE=null
+  - IDENTITY_SERVICE_DOMAIN=null
   - MIGRATIONS_PATH=migrations
   - DATABASE_URL=null
   - CLIENTS=null

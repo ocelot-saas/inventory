@@ -30,31 +30,20 @@ class OrgResource(object):
     def on_post(self, req, resp):
         """Create the organization and restaurant for a user."""
 
-        try:
-            id_token = self._id_token_header_validator.validate(req.auth)
-        except identity.validation.Error:
-            raise falcon.HTTPBadRequest(
-                title='Invalid Authorization header',
-                description='Invalid value "{}" for Authorization header'.format(req.auth))        
+        # right_now = self._the_clock.now()
+        # user = self._identity_client.get_user(id_token)
 
-        right_now = self._the_clock.now()
-        user = self._identity_client.get_user(id_token)
+        # try:
+        #     org_creation_data_raw = json.load(req.data)
+        #     org_creation_data = jsonschema.validate(org_creation_data_raw, schemas.ORG_CREATION_DATA)
+        # except:
+        #     pass
 
-        try:
-            org_creation_data_raw = json.load(req.data)
-            org_creation_data = jsonschema.validate(org_creation_data_raw, schemas.ORG_CREATION_DATA)
-        except:
-            pass
-
-        with self._sql_engine.begin() as conn:
-            org_row = self._fetch_org(conn, user.id)
+        # with self._sql_engine.begin() as conn:
+        #     org_row = self._fetch_org(conn, user.id)
 
     def on_get(self, req, resp):
         """Retrieve a particular organization, with info for the restaurant as well."""
-
-        try:
-            id_token = self._id_token_header_validator.validate(req.auth)
-        except identity.validation.Error:
 
         resp.status = falcon.HTTP_200
         self._cors_response(resp)
