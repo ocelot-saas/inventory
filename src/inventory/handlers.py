@@ -9,7 +9,34 @@ import inventory.config as config
 import inventory.validation as validation
 import inventory.schemas as schemas
 import sqlalchemy as sql
+import sqlalchemy.dialects.postgresql as postgresql
 import jsonschema
+
+
+_metadata = sql.MetaData(schema='inventory')
+
+_org = sql.Table(
+    'org', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)))
+
+_org_user = sql.Table(
+    'org_user', _metadata,
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
+    sql.Column('user_id', sql.Integer, unique=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.PrimaryKeyConstraint('org_id', 'user_id'))
+
+_restaurant = sql.Table(
+    'restaurant', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('name', sql.String(100)),
+    sql.Column('description', sql.Text()),
+    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
+    sql.Column('address', sql.Text()),
+    sql.Column('opening_hours', postgresql.JSON()))
 
 
 class OrgResource(object):

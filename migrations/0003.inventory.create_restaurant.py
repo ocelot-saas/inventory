@@ -13,8 +13,8 @@ CREATE TABLE inventory.restaurant (
     time_created TIMESTAMP NOT NULL,
     name VARCHAR(100) NOT NULL,
     description TEXT NOT NULL,
-    keywords VARCHAR(100) NOT NULL,
-    address VARCHAR(100) NOT NULL,
+    keywords TEXT[] NOT NULL,
+    address TEXT NOT NULL,
     opening_hours JSON NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT restaurant_fk_org_id
