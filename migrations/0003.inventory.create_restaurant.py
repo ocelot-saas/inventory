@@ -3,7 +3,7 @@
 from yoyo import step
 
 
-__depends__ = ['0002.create_org']
+__depends__ = ['0002.inventory.create_org']
 
 
 step("""
