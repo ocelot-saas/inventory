@@ -1,6 +1,6 @@
 """Identity validation."""
 
-import re
+import datetime
 import json
 
 import inventory.schemas as schemas
@@ -34,11 +34,17 @@ class OrgCreationRequestValidator(object):
             org_creation_request = json.loads(org_creation_request_raw)
             jsonschema.validate(org_creation_request, schemas.ORG_CREATION_REQUEST)
 
-            org_creation_request['name'] = self._restaurant_name_validator.validate(org_creation_request['name'])
-            org_creation_request['description'] = self._restaurant_description_validator.validate(org_creation_request['description'])
-            org_creation_request['keywords'] = self._restaurant_keywords_validator.validate(org_creation_request['keywords'])
-            org_creation_request['address'] = self._restaurant_address_validator.validate(org_creation_request['address'])
-            org_creation_request['opening_hours'] = self._restaurant_opening_hours_validator.validate(org_creation_request['opening_hours'])
+            org_creation_request['name'] = \
+                self._restaurant_name_validator.validate(org_creation_request['name'])
+            org_creation_request['description'] = \
+                self._restaurant_description_validator.validate(org_creation_request['description'])
+            org_creation_request['keywords'] = \
+                self._restaurant_keywords_validator.validate(org_creation_request['keywords'])
+            org_creation_request['address'] = \
+                self._restaurant_address_validator.validate(org_creation_request['address'])
+            org_creation_request['openingHours'] = \
+                self._restaurant_opening_hours_validator.validate(
+                    org_creation_request['openingHours'])
         except json.decoder.JSONDecodeError as e:
             raise Error('Could not decode org creation request') from e
         except jsonschema.ValidationError as e:
@@ -120,9 +126,21 @@ class RestaurantOpeningHoursValidator(object):
     def validate(self, opening_hours_raw):
         try:
             jsonschema.validate(opening_hours_raw, schemas.RESTAURANT_OPENING_HOURS)
-            # TODO(horia141): actually parse opening hours here.
-            opening_hours = dict(opening_hours_raw)
+            
+            self._validate_interval('weekday', opening_hours_raw['weekday'])
+            self._validate_interval('saturday', opening_hours_raw['saturday'])
+            self._validate_interval('sunday', opening_hours_raw['sunday'])
+            
+            opening_hours = opening_hours_raw
         except jsonschema.ValidationError as e:
             raise Error('Could not structurally validate opening hours') from e
 
         return opening_hours
+
+    def _validate_interval(self, label, interval):
+        start_time = datetime.time(interval['start']['hour'], interval['start']['minute'])
+        end_time = datetime.time(interval['end']['hour'], interval['end']['minute'])
+
+        if start_time >= end_time:
+            raise Error(
+                'Start time "{}" after end time "{}" for "{}"'.format(start_time, end_time, label))
