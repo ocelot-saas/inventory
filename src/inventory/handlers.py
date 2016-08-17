@@ -57,17 +57,65 @@ class OrgResource(object):
     def on_post(self, req, resp):
         """Create the organization and restaurant for a user."""
 
-        # right_now = self._the_clock.now()
-        # user = self._identity_client.get_user(id_token)
+        right_now = self._the_clock.now()
 
-        # try:
-        #     org_creation_data_raw = json.load(req.data)
-        #     org_creation_data = jsonschema.validate(org_creation_data_raw, schemas.ORG_CREATION_DATA)
-        # except:
-        #     pass
+        try:
+            org_creation_data = self._org_creation_data_validator.validate(req.json)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid org creation data',
+                description='Invalid data "{}"'.format(req.json)) from e
 
-        # with self._sql_engine.begin() as conn:
-        #     org_row = self._fetch_org(conn, user.id)
+        with self._sql_engine.begin() as conn:
+            org_and_restaurant_row = self._fetch_org_and_restaurant(conn, user['id'])
+
+            if org_and_restaurant_row is None:
+                is_new = True
+
+                create_org = _org \
+                    .insert() \
+                    .values(time_created=right_now)
+
+                result = conn.execute(create_org)
+                org_id = result.inserted_primary_key[0]
+                result.close()
+
+                create_restaurant = _restaurant \
+                    .insert() \
+                    .values(
+                        org_id=org_id,
+                        time_created=right_now,
+                        name=org_creation_data['name'],
+                        description=org_creation_data['description'],
+                        keywords=org_creation_data['keywords'],
+                        address=org_creation_data['address'],
+                        opening_hours=org_creation_data['openingHours'])
+
+                result = conn.execute(create_restaurant)
+                restaurant_id = result.inserted_primary_key[0]
+                result.close()
+            else:
+                is_new = False
+
+        response = {
+            'org': {
+                'id': org_and_restaurant_row['org_id'],
+                'timeCreatedTs': int(org_and_restaurant_row['org_time_created'].timestamp()),
+                'restaurant': {
+                    'id': org_and_restaurant_row['restaurant_id'],
+                    'timeCreatesTs':
+                        int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
+                    'name': org_and_restaurant_row['restaurant_name'],
+                    'description': org_and_restaurant_row['restaurant_description'],
+                    'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
+                    'openingHours': org_and_restaurant_row['restaurant_opening_hours']
+                }
+            }
+        }                
+
+        resp.status = falcon.HTTP_201 if is_new else falcon.HTTP_200
+        self._cors_response(resp)
+        resp.body = json.dumps(response)        
 
     def on_get(self, req, resp):
         """Retrieve a particular organization, with info for the restaurant as well."""
@@ -75,34 +123,56 @@ class OrgResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            x = """
-SELECT
-  o.id,
-  o.time_created,
-  r.id,
-  r.time_created,
-  r.name,
-  r.description,
-  r.keywords,
-  r.address,
-  r.opening_hours
-FROM
-  inventory.org_user ou
-    JOIN
-      inventory.org o
-    ON
-      ou.org_id = o.id
-    JOIN
-      inventory.restaurant r
-    ON
-      ou.org_id = r.id
-WHERE
-  ou.user_id = @user['id']
-"""
+            org_and_restaurant_row = self._fetch_org_and_restaurant(conn, user['id'])
+
+            if org_and_restaurant_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Org does not exist',
+                    description='Org does not exist')
+
+        response = {
+            'org': {
+                'id': org_and_restaurant_row['org_id'],
+                'timeCreatedTs': int(org_and_restaurant_row['org_time_created'].timestamp()),
+                'restaurant': {
+                    'id': org_and_restaurant_row['restaurant_id'],
+                    'timeCreatesTs':
+                        int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
+                    'name': org_and_restaurant_row['restaurant_name'],
+                    'description': org_and_restaurant_row['restaurant_description'],
+                    'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
+                    'openingHours': org_and_restaurant_row['restaurant_opening_hours']
+                }
+            }
+        }
 
         resp.status = falcon.HTTP_200
         self._cors_response(resp)
-        resp.body = json.dumps(req.context['user'])
+        resp.body = json.dumps(response)
+
+    def _fetch_org_and_restaurant(self, conn, user_id):
+        fetch_org_and_restaurant = sql.sql \
+            .select([
+                _org.c.id.label('org_id'),
+                _org.c.time_created.label('org_time_created'),
+                _restaurant.c.id.label('restaurant_id'),
+                _restaurant.c.time_created.label('restaurant_time_created'),
+                _restaurant.c.name.label('restaurant_name'),
+                _restaurant.c.description.label('restaurant_description'),
+                _restaurant.c.keywords.label('restaurant_keywords'),
+                _restaurant.c.address.label('restaurant_address'),
+                _restaurant.c.opening_hours.label('restaurant_opening_hours'),
+            ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_org_and_restaurant)
+        org_and_restaurant_row = result.fetchone()
+        result.close()
+
+        return org_and_restaurant_row
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
