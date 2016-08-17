@@ -18,11 +18,11 @@ CREATE TABLE inventory.org_user (
     user_id INTEGER NOT NULL,
     time_created TIMESTAMP NOT NULL,
     PRIMARY KEY (org_id, user_id),
-    CONSTRAINT org_users_fk_org_id
+    CONSTRAINT org_user_fk_org_id
         FOREIGN KEY (org_id) REFERENCES inventory.org(id),
-    CONSTRAINT org_users_uk_org_id
+    CONSTRAINT org_user_uk_org_id
         UNIQUE (org_id),
-    CONSTRAINT org_users_uk_user_id
+    CONSTRAINT org_user_uk_user_id
         UNIQUE (user_id)
 );
 """, """
