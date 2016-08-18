@@ -20,7 +20,7 @@ class Error(Exception):
 class OrgCreationRequestValidator(object):
     """Validator for an org creation request."""
 
-    def __init__(self, restaurant_name_validataor, restaurant_description_validator,
+    def __init__(self, restaurant_name_validator, restaurant_description_validator,
                  restaurant_keywords_validator, restaurant_address_validator,
                  restaurant_opening_hours_validator):
         self._restaurant_name_validator = restaurant_name_validator
@@ -45,7 +45,7 @@ class OrgCreationRequestValidator(object):
             org_creation_request['openingHours'] = \
                 self._restaurant_opening_hours_validator.validate(
                     org_creation_request['openingHours'])
-        except json.decoder.JSONDecodeError as e:
+        except ValueError as e:
             raise Error('Could not decode org creation request') from e
         except jsonschema.ValidationError as e:
             raise Error('Could not structurally validate org creation request') from e

@@ -19,13 +19,13 @@ auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
 #   GET retrieves general information about the organization and the restaurant
 app = falcon.API(middleware=[auth_middleware])
 
-restaurant_name_validataor = validation.RestaurantNameValidator()
+restaurant_name_validator = validation.RestaurantNameValidator()
 restaurant_description_validator = validation.RestaurantDescriptionValidator()
 restaurant_keywords_validator = validation.RestaurantKeywordsValidator()
 restaurant_address_validator = validation.RestaurantAddressValidator()
 restaurant_opening_hours_validator = validation.RestaurantOpeningHoursValidator()
 org_creation_request_validator = validation.OrgCreationRequestValidator(
-    restaurant_name_validataor=restaurant_name_validataor,
+    restaurant_name_validator=restaurant_name_validator,
     restaurant_description_validator=restaurant_description_validator,
     restaurant_keywords_validator=restaurant_keywords_validator,
     restaurant_address_validator=restaurant_address_validator,

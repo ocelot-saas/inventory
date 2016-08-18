@@ -41,8 +41,8 @@ RESTAURANT_OPENING_HOURS = {
             'description': 'A daily opening interval',
             'type': 'object',
             'properties': {
-                'start': {'$ref': '#/definitions/time'},
-                'end': {'$ref': '#/definitions/time'}
+                'start': {'$ref': '#definitions/time'},
+                'end': {'$ref': '#definitions/time'}
             },
             'required': ['start', 'end'],
             'additionalProperties': False
@@ -50,9 +50,9 @@ RESTAURANT_OPENING_HOURS = {
     },
     'type': 'object',
     'properties': {
-        'weekday': {'$ref': '#/definitions/interval'},
-        'saturday': {'$ref': '#/definitions/interval'},
-        'sunday': {'$ref': '$/definitions/interval'}
+        'weekday': {'$ref': '#definitions/interval'},
+        'saturday': {'$ref': '#definitions/interval'},
+        'sunday': {'$ref': '$definitions/interval'}
     },
     'required': ['weekday', 'saturday', 'sunday'],
     'additionalProperties': False

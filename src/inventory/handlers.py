@@ -61,11 +61,14 @@ class OrgResource(object):
         right_now = self._the_clock.now()
 
         try:
-            org_creation_request = self._org_creation_request_validator.validate(req.text)
+            org_creation_request_raw = req.stream.read().decode('utf-8')
+            org_creation_request = \
+                self._org_creation_request_validator.validate(org_creation_request_raw)
         except validation.Error as e:
+            raise
             raise falcon.HTTPBadRequest(
                 title='Invalid org creation data',
-                description='Invalid data "{}"'.format(req.json)) from e
+                description='Invalid data "{}"'.format(org_creation_request_raw)) from e
 
         with self._sql_engine.begin() as conn:
             try:
