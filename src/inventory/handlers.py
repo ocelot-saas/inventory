@@ -57,6 +57,8 @@ class OrgResource(object):
 
     def on_post(self, req, resp):
         """Create the organization and restaurant for a user."""
+        
+        self._cors_response(resp)
 
         right_now = self._the_clock.now()
         user = req.context['user']
@@ -126,11 +128,12 @@ class OrgResource(object):
         jsonschema.validate(response, schemas.ORG_RESPONSE)
 
         resp.status = falcon.HTTP_201
-        self._cors_response(resp)
         resp.body = json.dumps(response)
 
     def on_get(self, req, resp):
         """Retrieve a particular organization, with info for the restaurant as well."""
+
+        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -181,7 +184,6 @@ class OrgResource(object):
         jsonschema.validate(response, schemas.ORG_RESPONSE)
 
         resp.status = falcon.HTTP_200
-        self._cors_response(resp)
         resp.body = json.dumps(response)
 
     def _cors_response(self, resp):
