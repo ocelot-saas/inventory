@@ -10,10 +10,12 @@ class OrgResourceTestCase(falcon.testing.TestCase):
     def setUp(self):
         super(OrgResourceTestCase, self).setUp()
 
+        org_creation_request_validator = mock()
         the_clock = mock()
         sql_engine = mock()
 
         org_resource = inventory.OrgResource(
+            org_creation_request_validator=org_creation_request_validator,
             the_clock=the_clock,
             sql_engine=sql_engine)
 

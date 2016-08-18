@@ -59,6 +59,7 @@ class OrgResource(object):
         """Create the organization and restaurant for a user."""
 
         right_now = self._the_clock.now()
+        user = req.context['user']
 
         try:
             org_creation_request_raw = req.stream.read().decode('utf-8')
@@ -78,6 +79,13 @@ class OrgResource(object):
 
                 result = conn.execute(create_org)
                 org_id = result.inserted_primary_key[0]
+                result.close()
+
+                create_org_user = _org_user \
+                    .insert() \
+                    .values(org_id=org_id, user_id=user['id'], time_created=right_now)
+
+                result = conn.execute(create_org_user)
                 result.close()
 
                 create_restaurant = _restaurant \
@@ -105,10 +113,11 @@ class OrgResource(object):
                 'timeCreatedTs': int(right_now.timestamp()),
                 'restaurant': {
                     'id': restaurant_id,
-                    'timeCreatesTs': int(right_now.timestamp()),
+                    'timeCreatedTs': int(right_now.timestamp()),
                     'name': org_creation_request['name'],
                     'description': org_creation_request['description'],
                     'keywords': org_creation_request['keywords'],
+                    'address': org_creation_request['address'],
                     'openingHours': org_creation_request['openingHours']
                 }
             }
@@ -158,11 +167,12 @@ class OrgResource(object):
                 'timeCreatedTs': int(org_and_restaurant_row['org_time_created'].timestamp()),
                 'restaurant': {
                     'id': org_and_restaurant_row['restaurant_id'],
-                    'timeCreatesTs':
+                    'timeCreatedTs':
                         int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
                     'name': org_and_restaurant_row['restaurant_name'],
                     'description': org_and_restaurant_row['restaurant_description'],
                     'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
+                    'address': org_and_restaurant_row['restaurant_address'],
                     'openingHours': org_and_restaurant_row['restaurant_opening_hours']
                 }
             }

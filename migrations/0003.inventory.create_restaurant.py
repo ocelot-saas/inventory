@@ -11,7 +11,7 @@ CREATE TABLE inventory.restaurant (
     id SERIAL,
     org_id INTEGER NOT NULL,
     time_created TIMESTAMP NOT NULL,
-    name VARCHAR(100) NOT NULL,
+    name TEXT NOT NULL,
     description TEXT NOT NULL,
     keywords TEXT[] NOT NULL,
     address TEXT NOT NULL,

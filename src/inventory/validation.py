@@ -25,7 +25,7 @@ class OrgCreationRequestValidator(object):
                  restaurant_opening_hours_validator):
         self._restaurant_name_validator = restaurant_name_validator
         self._restaurant_description_validator = restaurant_description_validator
-        self._restaurant_keywords_validataor = restaurant_keywords_validator
+        self._restaurant_keywords_validator = restaurant_keywords_validator
         self._restaurant_address_validator = restaurant_address_validator
         self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
 
@@ -60,14 +60,19 @@ class OrgCreationRequestValidator(object):
 class RestaurantNameValidator(object):
     """Validator for a restaurant name."""
 
+    MAX_NAME_SIZE = 100
+
     def __init__(self):
         pass
 
     def validate(self, name_raw):
-        name = name_raw.trim()
+        name = name_raw.strip()
 
         if name == '':
             raise Error('Name is empty')
+
+        if len(name) > self.MAX_NAME_SIZE:
+            raise Error('Name is too long')
 
         return name
 
@@ -75,11 +80,16 @@ class RestaurantNameValidator(object):
 class RestaurantDescriptionValidator(object):
     """Validator for a restaurant description."""
 
+    MAX_DESCRIPTION_SIZE = 1000
+
     def __init__(self):
         pass
 
     def validate(self, description_raw):
-        description = description_raw.trim()
+        description = description_raw.strip()
+
+        if len(description) > self.MAX_DESCRIPTION_SIZE:
+            raise Error('Description is too long')
 
         return description
 
@@ -87,18 +97,24 @@ class RestaurantDescriptionValidator(object):
 class RestaurantKeywordsValidator(object):
     """Validator for a restaurant keywords set."""
 
+    MAX_KEYWORD_SIZE = 100
+
     def __init__(self):
         pass
 
     def validate(self, keywords_raw):
         try:
             jsonschema.validate(keywords_raw, schemas.RESTAURANT_KEYWORDS)
-            keywords_unsorted = [kw.trim() for kw in keywords_raw]
+            keywords_unsorted = [kw.strip() for kw in keywords_raw]
 
             if any(kw == '' for kw in keywords_unsorted):
                 raise Error('Keyword is empty')
 
-            keywords = sorted(set(keywords))
+            for kw in keywords_unsorted:
+                if len(kw) > self.MAX_KEYWORD_SIZE:
+                    raise Error('Keyword "{}" is too long'.format(kw))
+
+            keywords = sorted(set(keywords_unsorted))
         except jsonschema.ValidationError as e:
             raise Error('Could not structurally validate keyword set') from e
 
@@ -108,11 +124,16 @@ class RestaurantKeywordsValidator(object):
 class RestaurantAddressValidator(object):
     """Validator for a restaurant address."""
 
+    MAX_ADDRESS_SIZE = 100
+
     def __init__(self):
         pass
 
     def validate(self, address_raw):
-        address = address_raw.trim()
+        address = address_raw.strip()
+
+        if len(address) > self.MAX_ADDRESS_SIZE:
+            raise Error('Address is too long')
 
         return address
 

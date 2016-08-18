@@ -1,5 +1,42 @@
 """Schema for the inventory APIs objects."""
 
+TIME_IN_DAY = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'A particular time in a day',
+    'description': 'A particular time in a day',
+    'type': 'object',
+    'properties': {
+        'hour': {
+            'description': 'The hour for the time',
+            'type': 'integer',
+            'minimum': 0,
+            'maximum': 23,
+        },
+        'minute': {
+            'description': 'The minute for the time',
+            'type': 'integer',
+            'minimum': 0,
+            'maximum': 59
+        },
+    },
+    'required': ['hour', 'minute'],
+    'additionalProperties': False,
+}
+
+
+INTERVAL_IN_DAY = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'A particular interval in a day',
+    'description': 'A particular interval in a day',
+    'type': 'object',
+    'properties': {
+        'start': TIME_IN_DAY,
+        'end': TIME_IN_DAY,
+    },
+    'required': ['start', 'end'],
+    'additionalPropertiers': False,
+}
+
 
 RESTAURANT_KEYWORDS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -16,43 +53,11 @@ RESTAURANT_OPENING_HOURS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Restaurant opening hours',
     'description': 'The set of opening hours for a restaurant',
-    'definitions': {
-        'time': {
-            'description': 'A time in a day',
-            'type': 'object',
-            'properties': {
-                'hour': {
-                    'description': 'The hour for the time',
-                    'type': 'integer',
-                    'minimum': 0,
-                    'maximum': 23,
-                },
-                'minute': {
-                    'description': 'The minute for the time',
-                    'type': 'integer',
-                    'minimum': 0,
-                    'maximum': 59
-                },
-            },
-            'required': ['hour', 'minute'],
-            'additionalProperties': False,
-        },
-        'interval': {
-            'description': 'A daily opening interval',
-            'type': 'object',
-            'properties': {
-                'start': {'$ref': '#definitions/time'},
-                'end': {'$ref': '#definitions/time'}
-            },
-            'required': ['start', 'end'],
-            'additionalProperties': False
-        },
-    },
     'type': 'object',
     'properties': {
-        'weekday': {'$ref': '#definitions/interval'},
-        'saturday': {'$ref': '#definitions/interval'},
-        'sunday': {'$ref': '$definitions/interval'}
+        'weekday': INTERVAL_IN_DAY,
+        'saturday': INTERVAL_IN_DAY,
+        'sunday': INTERVAL_IN_DAY,
     },
     'required': ['weekday', 'saturday', 'sunday'],
     'additionalProperties': False
