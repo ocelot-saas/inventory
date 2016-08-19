@@ -189,4 +189,4 @@ class OrgResource(object):
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
         resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization')
+        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
