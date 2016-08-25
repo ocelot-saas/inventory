@@ -153,3 +153,16 @@ ORG_RESPONSE = {
     'required': ['org'],
     'additionalProperties': False
 }
+
+
+RESTAURANT_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Restaurant response',
+    'description': 'Common response for restaurants',
+    'type': 'object',
+    'properties': {
+        'restaurant': RESTAURANT
+    },
+    'required': ['restaurant'],
+    'additionalProperties': False
+}

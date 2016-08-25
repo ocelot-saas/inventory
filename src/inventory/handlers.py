@@ -190,3 +190,74 @@ class OrgResource(object):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
         resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+
+class RestaurantResource(object):
+    """The restaurant for an organization."""
+
+    def __init__(self, the_clock, sql_engine):
+        self._the_clock = the_clock
+        self._sql_engine = sql_engine
+
+        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
+        
+    def on_options(self, req, resp):
+        """Check CORS is OK."""
+
+        resp.status = falcon.HTTP_204
+        self._cors_response(resp)
+
+    def on_get(self, req, resp):
+        """Get the restaurant for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        with self._sql_engine.begin() as conn:
+            fetch_org_and_restaurant = sql.sql \
+                .select([
+                    _restaurant.c.id.label('restaurant_id'),
+                    _restaurant.c.time_created.label('restaurant_time_created'),
+                    _restaurant.c.name.label('restaurant_name'),
+                    _restaurant.c.description.label('restaurant_description'),
+                    _restaurant.c.keywords.label('restaurant_keywords'),
+                    _restaurant.c.address.label('restaurant_address'),
+                    _restaurant.c.opening_hours.label('restaurant_opening_hours'),
+                    ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+                .where(_org_user.c.user_id == user['id'])
+
+            result = conn.execute(fetch_org_and_restaurant)
+            org_and_restaurant_row = result.fetchone()
+            result.close()
+
+            if org_and_restaurant_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Org does not exist',
+                    description='Org does not exist')
+
+        response = {
+            'restaurant': {
+                'id': org_and_restaurant_row['restaurant_id'],
+                'timeCreatedTs':
+                int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
+                'name': org_and_restaurant_row['restaurant_name'],
+                'description': org_and_restaurant_row['restaurant_description'],
+                'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
+                'address': org_and_restaurant_row['restaurant_address'],
+                'openingHours': org_and_restaurant_row['restaurant_opening_hours']
+            }
+        }
+
+        jsonschema.validate(response, schemas.RESTAURANT_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def _cors_response(self, resp):
+        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
+        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')

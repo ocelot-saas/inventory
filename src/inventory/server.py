@@ -38,7 +38,12 @@ org_resource = inventory.OrgResource(
     the_clock=the_clock,
     sql_engine=sql_engine)
 
+restaurant_resource = inventory.RestaurantResource(
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
 app.add_route('/org', org_resource)
+app.add_route('/org/restaurant', restaurant_resource)
 
 
 def main():
