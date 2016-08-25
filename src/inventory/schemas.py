@@ -110,10 +110,9 @@ ORG = {
         'timeCreatedTs': {
             'description': 'The time the org was created, in UTC',
             'type': 'integer',
-        },
-        'restaurant': RESTAURANT,
+        }
     },
-    'required': ['id', 'timeCreatedTs', 'restaurant'],
+    'required': ['id', 'timeCreatedTs'],
     'additionalProperties': False
 }
 

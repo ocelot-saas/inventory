@@ -112,16 +112,7 @@ class OrgResource(object):
         response = {
             'org': {
                 'id': org_id,
-                'timeCreatedTs': int(right_now.timestamp()),
-                'restaurant': {
-                    'id': restaurant_id,
-                    'timeCreatedTs': int(right_now.timestamp()),
-                    'name': org_creation_request['name'],
-                    'description': org_creation_request['description'],
-                    'keywords': org_creation_request['keywords'],
-                    'address': org_creation_request['address'],
-                    'openingHours': org_creation_request['openingHours']
-                }
+                'timeCreatedTs': int(right_now.timestamp())
             }
         }
 
@@ -138,46 +129,28 @@ class OrgResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            fetch_org_and_restaurant = sql.sql \
+            fetch_org = sql.sql \
                 .select([
-                    _org.c.id.label('org_id'),
-                    _org.c.time_created.label('org_time_created'),
-                    _restaurant.c.id.label('restaurant_id'),
-                    _restaurant.c.time_created.label('restaurant_time_created'),
-                    _restaurant.c.name.label('restaurant_name'),
-                    _restaurant.c.description.label('restaurant_description'),
-                    _restaurant.c.keywords.label('restaurant_keywords'),
-                    _restaurant.c.address.label('restaurant_address'),
-                    _restaurant.c.opening_hours.label('restaurant_opening_hours'),
+                    _org.c.id,
+                    _org.c.time_created
                     ]) \
                 .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+                             .join(_org, _org.c.id == _org_user.c.org_id)) \
                 .where(_org_user.c.user_id == user['id'])
 
-            result = conn.execute(fetch_org_and_restaurant)
-            org_and_restaurant_row = result.fetchone()
+            result = conn.execute(fetch_org)
+            org_row = result.fetchone()
             result.close()
 
-            if org_and_restaurant_row is None:
+            if org_row is None:
                 raise falcon.HTTPNotFound(
                     title='Org does not exist',
                     description='Org does not exist')
 
         response = {
             'org': {
-                'id': org_and_restaurant_row['org_id'],
-                'timeCreatedTs': int(org_and_restaurant_row['org_time_created'].timestamp()),
-                'restaurant': {
-                    'id': org_and_restaurant_row['restaurant_id'],
-                    'timeCreatedTs':
-                        int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
-                    'name': org_and_restaurant_row['restaurant_name'],
-                    'description': org_and_restaurant_row['restaurant_description'],
-                    'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
-                    'address': org_and_restaurant_row['restaurant_address'],
-                    'openingHours': org_and_restaurant_row['restaurant_opening_hours']
-                }
+                'id': org_row['id'],
+                'timeCreatedTs': int(org_row['time_created'].timestamp())
             }
         }
 
@@ -215,40 +188,39 @@ class RestaurantResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            fetch_org_and_restaurant = sql.sql \
+            fetch_restaurant = sql.sql \
                 .select([
-                    _restaurant.c.id.label('restaurant_id'),
-                    _restaurant.c.time_created.label('restaurant_time_created'),
-                    _restaurant.c.name.label('restaurant_name'),
-                    _restaurant.c.description.label('restaurant_description'),
-                    _restaurant.c.keywords.label('restaurant_keywords'),
-                    _restaurant.c.address.label('restaurant_address'),
-                    _restaurant.c.opening_hours.label('restaurant_opening_hours'),
+                    _restaurant.c.id,
+                    _restaurant.c.time_created,
+                    _restaurant.c.name,
+                    _restaurant.c.description,
+                    _restaurant.c.keywords,
+                    _restaurant.c.address,
+                    _restaurant.c.opening_hours,
                     ]) \
                 .select_from(_org_user
                              .join(_org, _org.c.id == _org_user.c.org_id)
                              .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
                 .where(_org_user.c.user_id == user['id'])
 
-            result = conn.execute(fetch_org_and_restaurant)
-            org_and_restaurant_row = result.fetchone()
+            result = conn.execute(fetch_restaurant)
+            restaurant_row = result.fetchone()
             result.close()
 
-            if org_and_restaurant_row is None:
+            if restaurant_row is None:
                 raise falcon.HTTPNotFound(
-                    title='Org does not exist',
-                    description='Org does not exist')
+                    title='Restaurant does not exist',
+                    description='Restaurant does not exist')
 
         response = {
             'restaurant': {
-                'id': org_and_restaurant_row['restaurant_id'],
-                'timeCreatedTs':
-                int(org_and_restaurant_row['restaurant_time_created'].timestamp()),
-                'name': org_and_restaurant_row['restaurant_name'],
-                'description': org_and_restaurant_row['restaurant_description'],
-                'keywords': [kw for kw in org_and_restaurant_row['restaurant_keywords']],
-                'address': org_and_restaurant_row['restaurant_address'],
-                'openingHours': org_and_restaurant_row['restaurant_opening_hours']
+                'id': restaurant_row['id'],
+                'timeCreatedTs': int(restaurant_row['time_created'].timestamp()),
+                'name': restaurant_row['name'],
+                'description': restaurant_row['description'],
+                'keywords': [kw for kw in restaurant_row['keywords']],
+                'address': restaurant_row['address'],
+                'openingHours': restaurant_row['opening_hours']
             }
         }
 
