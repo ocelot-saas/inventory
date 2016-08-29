@@ -197,7 +197,7 @@ class RestaurantResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            fetch_restaurant = self._fetch_restaurant(conn)
+            restaurant_row = self._fetch_restaurant(conn, user['id'])
 
             if restaurant_row is None:
                 raise falcon.HTTPNotFound(
@@ -233,12 +233,13 @@ class RestaurantResource(object):
             restaurant_update_request = \
                 self._restaurant_update_request_validator.validate(restaurant_update_request_raw)
         except validation.Error as e:
+            raise e
             raise falcon.HTTPBadRequest(
                 title='Invalid restaurant update data',
                 description='Invalid data "{}"'.format(restaurant_update_request_raw)) from e
 
         with self._sql_engine.begin() as conn:
-            restaurant_row = self._fetch_restaurant(conn)
+            restaurant_row = self._fetch_restaurant(conn, user['id'])
 
             if restaurant_row is None:
                 raise falcon.HTTPNotFound(
@@ -250,10 +251,10 @@ class RestaurantResource(object):
 
             update_restaurant = _restaurant \
                 .update() \
-                .where(_restaurant.c_id == restaurant_row['id']) \
+                .where(_restaurant.c.id == restaurant_row['id']) \
                 .values(**properties_to_update)
 
-            result = conn.execute()
+            result = conn.execute(update_restaurant)
             result.close()
 
         response = {
@@ -280,7 +281,7 @@ class RestaurantResource(object):
         resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
-    def _fetch_restaurant(self, conn):
+    def _fetch_restaurant(self, conn, user_id):
         fetch_restaurant = sql.sql \
             .select([
                 _restaurant.c.id,
@@ -294,7 +295,7 @@ class RestaurantResource(object):
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user['id'])
+            .where(_org_user.c.user_id == user_id)
 
         result = conn.execute(fetch_restaurant)
         restaurant_row = result.fetchone()

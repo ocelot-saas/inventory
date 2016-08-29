@@ -175,7 +175,13 @@ RESTAURANT_UPDATE_REQUEST = {
         },
         'openingHours': RESTAURANT_OPENING_HOURS,
     },
-    'required': [],
+    'anyOf': [
+        {'required': ['name']},
+        {'required': ['description']},
+        {'required': ['keywords']},
+        {'required': ['address']},
+        {'required': ['openingHours']}
+    ],
     'additionalProperties': False
 }
 

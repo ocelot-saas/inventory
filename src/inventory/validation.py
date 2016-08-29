@@ -206,7 +206,7 @@ class RestaurantUpdateRequestValidator(object):
             if 'openingHours' in restaurant_update_request:
                 restaurant_update_request['openingHours'] = \
                     self._restaurant_opening_hours_validator.validate(
-                        restaurant_opening_hours_validator['openingHours'])
+                        restaurant_update_request['openingHours'])
         except ValueError as e:
             raise Error('Could not decode restaurant update request') from e
         except jsonschema.ValidationError as e:
