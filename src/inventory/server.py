@@ -30,6 +30,12 @@ org_creation_request_validator = validation.OrgCreationRequestValidator(
     restaurant_keywords_validator=restaurant_keywords_validator,
     restaurant_address_validator=restaurant_address_validator,
     restaurant_opening_hours_validator=restaurant_opening_hours_validator)
+restaurant_update_request_validator = validation.RestaurantUpdateRequestValidator(
+    restaurant_name_validator=restaurant_name_validator,
+    restaurant_description_validator=restaurant_description_validator,
+    restaurant_keywords_validator=restaurant_keywords_validator,
+    restaurant_address_validator=restaurant_address_validator,
+    restaurant_opening_hours_validator=restaurant_opening_hours_validator)
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
 
@@ -39,6 +45,7 @@ org_resource = inventory.OrgResource(
     sql_engine=sql_engine)
 
 restaurant_resource = inventory.RestaurantResource(
+    restaurant_update_request_validator=restaurant_update_request_validator,
     the_clock=the_clock,
     sql_engine=sql_engine)
 

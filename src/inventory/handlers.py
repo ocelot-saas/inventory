@@ -39,6 +39,15 @@ _restaurant = sql.Table(
     sql.Column('opening_hours', postgresql.JSON()))
 
 
+_RESTAURANT_E2I_FIELD_NAMES = {
+    'name': 'name',
+    'description': 'description',
+    'keywords': 'keywords',
+    'address': 'address',
+    'openingHours': 'opening_hours'
+}
+
+
 class OrgResource(object):
     """The collection of organizations."""
 
@@ -68,7 +77,6 @@ class OrgResource(object):
             org_creation_request = \
                 self._org_creation_request_validator.validate(org_creation_request_raw)
         except validation.Error as e:
-            raise
             raise falcon.HTTPBadRequest(
                 title='Invalid org creation data',
                 description='Invalid data "{}"'.format(org_creation_request_raw)) from e
@@ -168,7 +176,8 @@ class OrgResource(object):
 class RestaurantResource(object):
     """The restaurant for an organization."""
 
-    def __init__(self, the_clock, sql_engine):
+    def __init__(self, restaurant_update_request_validator, the_clock, sql_engine):
+        self._restaurant_update_request_validator = restaurant_update_request_validator
         self._the_clock = the_clock
         self._sql_engine = sql_engine
 
@@ -188,24 +197,7 @@ class RestaurantResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            fetch_restaurant = sql.sql \
-                .select([
-                    _restaurant.c.id,
-                    _restaurant.c.time_created,
-                    _restaurant.c.name,
-                    _restaurant.c.description,
-                    _restaurant.c.keywords,
-                    _restaurant.c.address,
-                    _restaurant.c.opening_hours,
-                    ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
-                .where(_org_user.c.user_id == user['id'])
-
-            result = conn.execute(fetch_restaurant)
-            restaurant_row = result.fetchone()
-            result.close()
+            fetch_restaurant = self._fetch_restaurant(conn)
 
             if restaurant_row is None:
                 raise falcon.HTTPNotFound(
@@ -229,7 +221,83 @@ class RestaurantResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
+    def on_put(self, req, resp):
+        """Update the restaurant for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        try:
+            restaurant_update_request_raw = req.stream.read().decode('utf-8')
+            restaurant_update_request = \
+                self._restaurant_update_request_validator.validate(restaurant_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid restaurant update data',
+                description='Invalid data "{}"'.format(restaurant_update_request_raw)) from e
+
+        with self._sql_engine.begin() as conn:
+            restaurant_row = self._fetch_restaurant(conn)
+
+            if restaurant_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Restaurant does not exist',
+                    description='Restaurant does not exist')
+
+            properties_to_update = dict(
+                (_RESTAURANT_E2I_FIELD_NAMES[k], v) for (k, v) in restaurant_update_request.items())
+
+            update_restaurant = _restaurant \
+                .update() \
+                .where(_restaurant.c_id == restaurant_row['id']) \
+                .values(**properties_to_update)
+
+            result = conn.execute()
+            result.close()
+
+        response = {
+            'restaurant': {
+                'id': restaurant_row['id'],
+                'timeCreatedTs': int(restaurant_row['time_created'].timestamp()),
+                'name': restaurant_row['name'],
+                'description': restaurant_row['description'],
+                'keywords': [kw for kw in restaurant_row['keywords']],
+                'address': restaurant_row['address'],
+                'openingHours': restaurant_row['opening_hours']
+            }
+        }
+        
+        response['restaurant'].update(restaurant_update_request)
+
+        jsonschema.validate(response, schemas.RESTAURANT_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+    def _fetch_restaurant(self, conn):
+        fetch_restaurant = sql.sql \
+            .select([
+                _restaurant.c.id,
+                _restaurant.c.time_created,
+                _restaurant.c.name,
+                _restaurant.c.description,
+                _restaurant.c.keywords,
+                _restaurant.c.address,
+                _restaurant.c.opening_hours,
+                ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user['id'])
+
+        result = conn.execute(fetch_restaurant)
+        restaurant_row = result.fetchone()
+        result.close()
+
+        return restaurant_row

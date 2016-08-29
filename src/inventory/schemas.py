@@ -154,6 +154,32 @@ ORG_RESPONSE = {
 }
 
 
+RESTAURANT_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Restaurant update request',
+    'description': 'Request for updating a restaurant',
+    'type': 'object',
+    'properties': {
+        'name': {
+            'description': 'The name of the restaurant',
+            'type': 'string',
+        },
+        'description': {
+            'description': 'The description of the restaurant',
+            'type': 'string',
+        },
+        'keywords': RESTAURANT_KEYWORDS,
+        'address': {
+            'description': 'The address of the restaurant',
+            'type': 'string',
+        },
+        'openingHours': RESTAURANT_OPENING_HOURS,
+    },
+    'required': [],
+    'additionalProperties': False
+}
+
+
 RESTAURANT_RESPONSE = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Restaurant response',

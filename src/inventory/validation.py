@@ -17,46 +17,6 @@ class Error(Exception):
         return 'Validation error! Reason:\n {}'.format(str(self._reason))
 
 
-class OrgCreationRequestValidator(object):
-    """Validator for an org creation request."""
-
-    def __init__(self, restaurant_name_validator, restaurant_description_validator,
-                 restaurant_keywords_validator, restaurant_address_validator,
-                 restaurant_opening_hours_validator):
-        self._restaurant_name_validator = restaurant_name_validator
-        self._restaurant_description_validator = restaurant_description_validator
-        self._restaurant_keywords_validator = restaurant_keywords_validator
-        self._restaurant_address_validator = restaurant_address_validator
-        self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
-
-    def validate(self, org_creation_request_raw):
-        try:
-            org_creation_request = json.loads(org_creation_request_raw)
-            jsonschema.validate(org_creation_request, schemas.ORG_CREATION_REQUEST)
-
-            org_creation_request['name'] = \
-                self._restaurant_name_validator.validate(org_creation_request['name'])
-            org_creation_request['description'] = \
-                self._restaurant_description_validator.validate(org_creation_request['description'])
-            org_creation_request['keywords'] = \
-                self._restaurant_keywords_validator.validate(org_creation_request['keywords'])
-            org_creation_request['address'] = \
-                self._restaurant_address_validator.validate(org_creation_request['address'])
-            org_creation_request['openingHours'] = \
-                self._restaurant_opening_hours_validator.validate(
-                    org_creation_request['openingHours'])
-        except ValueError as e:
-            raise Error('Could not decode org creation request') from e
-        except jsonschema.ValidationError as e:
-            raise Error('Could not structurally validate org creation request') from e
-        except Error as e:
-            raise Error('Could not validate org creation request') from e
-        except Exception as e:
-            raise Error('Other error') from e
-
-        return org_creation_request
-
-
 class RestaurantNameValidator(object):
     """Validator for a restaurant name."""
 
@@ -165,3 +125,95 @@ class RestaurantOpeningHoursValidator(object):
         if start_time >= end_time:
             raise Error(
                 'Start time "{}" after end time "{}" for "{}"'.format(start_time, end_time, label))
+
+
+class OrgCreationRequestValidator(object):
+    """Validator for an org creation request."""
+
+    def __init__(self, restaurant_name_validator, restaurant_description_validator,
+                 restaurant_keywords_validator, restaurant_address_validator,
+                 restaurant_opening_hours_validator):
+        self._restaurant_name_validator = restaurant_name_validator
+        self._restaurant_description_validator = restaurant_description_validator
+        self._restaurant_keywords_validator = restaurant_keywords_validator
+        self._restaurant_address_validator = restaurant_address_validator
+        self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
+
+    def validate(self, org_creation_request_raw):
+        try:
+            org_creation_request = json.loads(org_creation_request_raw)
+            jsonschema.validate(org_creation_request, schemas.ORG_CREATION_REQUEST)
+
+            org_creation_request['name'] = \
+                self._restaurant_name_validator.validate(org_creation_request['name'])
+            org_creation_request['description'] = \
+                self._restaurant_description_validator.validate(org_creation_request['description'])
+            org_creation_request['keywords'] = \
+                self._restaurant_keywords_validator.validate(org_creation_request['keywords'])
+            org_creation_request['address'] = \
+                self._restaurant_address_validator.validate(org_creation_request['address'])
+            org_creation_request['openingHours'] = \
+                self._restaurant_opening_hours_validator.validate(
+                    org_creation_request['openingHours'])
+        except ValueError as e:
+            raise Error('Could not decode org creation request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate org creation request') from e
+        except Error as e:
+            raise Error('Could not validate org creation request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return org_creation_request
+
+
+class RestaurantUpdateRequestValidator(object):
+    """Validator for a restaurant update request."""
+
+    def __init__(self, restaurant_name_validator, restaurant_description_validator,
+                 restaurant_keywords_validator, restaurant_address_validator,
+                 restaurant_opening_hours_validator):
+        self._restaurant_name_validator = restaurant_name_validator
+        self._restaurant_description_validator = restaurant_description_validator
+        self._restaurant_keywords_validator = restaurant_keywords_validator
+        self._restaurant_address_validator = restaurant_address_validator
+        self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
+
+    def validate(self, restaurant_update_request_raw):
+        try:
+            restaurant_update_request = json.loads(restaurant_update_request_raw)
+            jsonschema.validate(restaurant_update_request, schemas.RESTAURANT_UPDATE_REQUEST)
+
+            if 'name' in restaurant_update_request:
+                restaurant_update_request['name'] = \
+                    self._restaurant_name_validator.validate(restaurant_update_request['name'])
+
+            if 'description' in restaurant_update_request:
+                restaurant_update_request['description'] = \
+                    self._restaurant_description_validator.validate(
+                        restaurant_update_request['description'])
+
+            if 'keywords' in restaurant_update_request:
+                restaurant_update_request['keywords'] = \
+                    self._restaurant_keywords_validator.validate(
+                        restaurant_update_request['keywords'])
+
+            if 'address' in restaurant_update_request:
+                restaurant_update_request['address'] = \
+                    self._restaurant_address_validator.validate(
+                        restaurant_update_request['address'])
+
+            if 'openingHours' in restaurant_update_request:
+                restaurant_update_request['openingHours'] = \
+                    self._restaurant_opening_hours_validator.validate(
+                        restaurant_opening_hours_validator['openingHours'])
+        except ValueError as e:
+            raise Error('Could not decode restaurant update request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate restaurant update request') from e
+        except Error as e:
+            raise Error('Could not validate restaurant update request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return restaurant_update_request
