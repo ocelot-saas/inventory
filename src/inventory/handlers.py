@@ -36,7 +36,8 @@ _restaurant = sql.Table(
     sql.Column('description', sql.Text()),
     sql.Column('keywords', postgresql.ARRAY(sql.Text)),
     sql.Column('address', sql.Text()),
-    sql.Column('opening_hours', postgresql.JSON()))
+    sql.Column('opening_hours', postgresql.JSON()),
+    sql.Column('image_set', postgresql.JSON()))
 
 
 _RESTAURANT_E2I_FIELD_NAMES = {
@@ -44,7 +45,8 @@ _RESTAURANT_E2I_FIELD_NAMES = {
     'description': 'description',
     'keywords': 'keywords',
     'address': 'address',
-    'openingHours': 'opening_hours'
+    'openingHours': 'opening_hours',
+    'imageSet': 'image_set'
 }
 
 
@@ -107,7 +109,8 @@ class OrgResource(object):
                         description=org_creation_request['description'],
                         keywords=org_creation_request['keywords'],
                         address=org_creation_request['address'],
-                        opening_hours=org_creation_request['openingHours'])
+                        opening_hours=org_creation_request['openingHours'],
+                        image_set=org_creation_request['imageSet'])
 
                 result = conn.execute(create_restaurant)
                 restaurant_id = result.inserted_primary_key[0]
@@ -169,7 +172,7 @@ class OrgResource(object):
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
 
@@ -212,7 +215,8 @@ class RestaurantResource(object):
                 'description': restaurant_row['description'],
                 'keywords': [kw for kw in restaurant_row['keywords']],
                 'address': restaurant_row['address'],
-                'openingHours': restaurant_row['opening_hours']
+                'openingHours': restaurant_row['opening_hours'],
+                'imageSet': restaurant_row['image_set']
             }
         }
 
@@ -265,7 +269,8 @@ class RestaurantResource(object):
                 'description': restaurant_row['description'],
                 'keywords': [kw for kw in restaurant_row['keywords']],
                 'address': restaurant_row['address'],
-                'openingHours': restaurant_row['opening_hours']
+                'openingHours': restaurant_row['opening_hours'],
+                'imageSet': request_row['image_set']
             }
         }
         
@@ -291,6 +296,7 @@ class RestaurantResource(object):
                 _restaurant.c.keywords,
                 _restaurant.c.address,
                 _restaurant.c.opening_hours,
+                _restaurant.c.image_set,
                 ]) \
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)

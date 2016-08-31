@@ -24,18 +24,21 @@ restaurant_description_validator = validation.RestaurantDescriptionValidator()
 restaurant_keywords_validator = validation.RestaurantKeywordsValidator()
 restaurant_address_validator = validation.RestaurantAddressValidator()
 restaurant_opening_hours_validator = validation.RestaurantOpeningHoursValidator()
+image_set_validator = validation.ImageSetValidator()
 org_creation_request_validator = validation.OrgCreationRequestValidator(
     restaurant_name_validator=restaurant_name_validator,
     restaurant_description_validator=restaurant_description_validator,
     restaurant_keywords_validator=restaurant_keywords_validator,
     restaurant_address_validator=restaurant_address_validator,
-    restaurant_opening_hours_validator=restaurant_opening_hours_validator)
+    restaurant_opening_hours_validator=restaurant_opening_hours_validator,
+    image_set_validator=image_set_validator)
 restaurant_update_request_validator = validation.RestaurantUpdateRequestValidator(
     restaurant_name_validator=restaurant_name_validator,
     restaurant_description_validator=restaurant_description_validator,
     restaurant_keywords_validator=restaurant_keywords_validator,
     restaurant_address_validator=restaurant_address_validator,
-    restaurant_opening_hours_validator=restaurant_opening_hours_validator)
+    restaurant_opening_hours_validator=restaurant_opening_hours_validator,
+    image_set_validator=image_set_validator)
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
 

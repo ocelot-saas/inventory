@@ -34,9 +34,8 @@ INTERVAL_IN_DAY = {
         'end': TIME_IN_DAY,
     },
     'required': ['start', 'end'],
-    'additionalPropertiers': False,
+    'additionalProperties': False,
 }
-
 
 RESTAURANT_KEYWORDS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -48,6 +47,7 @@ RESTAURANT_KEYWORDS = {
     },
     'additionalItems': False
 }
+
 
 RESTAURANT_OPENING_HOURS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -62,6 +62,7 @@ RESTAURANT_OPENING_HOURS = {
     'required': ['weekday', 'saturday', 'sunday'],
     'additionalProperties': False
 }
+
 
 RESTAURANT = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -91,11 +92,67 @@ RESTAURANT = {
             'type': 'string',
         },
         'openingHours': RESTAURANT_OPENING_HOURS,
+        'imageSet': IMAGE_SET,
     },
     'required': ['id', 'timeCreatedTs', 'name', 'description', 'keywords',
-                 'address', 'openingHours'],
+                 'address', 'openingHours', 'imageSet'],
     'additionalProperties': False
 }
+
+
+# TODO(horia141): keep in sync with frontend
+IMAGE_ASPECT_RATIO = 16/9
+IMAGE_MIN_WIDTH = 800
+IMAGE_MIN_HEIGHT = 450
+IMAGE_MAX_WIDTH = 1600
+IMAGE_MAX_HEIGHT = 900
+IMAGE_WIDTH = IMAGE_MAX_WIDTH
+IMAGE_HEIGHT = IMAGE_MAX_HEIGHT
+
+IMAGE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Image',
+    'description': 'An image',
+    'type': 'object',
+    'properties': {
+        'orderNo': {
+            'description': 'The order in which the image appears for display',
+            'type': 'integer',
+            'minimum': 0
+        },
+        'uri': {
+            'description': 'The URI where the image can be retrieved',
+            'type': 'string',
+        },
+        'width': {
+            'description': 'The width of the image',
+            'type': 'integer',
+            'minimum': IMAGE_MIN_WIDTH,
+            'maximum': IMAGE_MAX_WIDTH
+        },
+        'height': {
+            'description': 'The height of the image',
+            'type': 'integer',
+            'minimum': IMAGE_MIN_HEIGHT,
+            'maximum': IMAGE_MAX_HEIGHT
+        }
+    },
+    'required': ['uri', 'width', 'height'],
+    'additionalProperties': False
+}
+
+
+IMAGE_SET = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Image set',
+    'description': 'A set of images',
+    'type': 'array',
+    'items': {
+        'type': IMAGE
+    },
+    'additionalItems': False
+}
+
 
 ORG = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -115,6 +172,7 @@ ORG = {
     'required': ['id', 'timeCreatedTs'],
     'additionalProperties': False
 }
+
 
 ORG_CREATION_REQUEST = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -136,10 +194,12 @@ ORG_CREATION_REQUEST = {
             'type': 'string',
         },
         'openingHours': RESTAURANT_OPENING_HOURS,
+        'imageSet': IMAGE_SET
     },
-    'required': ['name', 'description', 'keywords', 'address', 'openingHours'],
+    'required': ['name', 'description', 'keywords', 'address', 'openingHours', 'imageSet'],
     'additionalProperties': False
 }
+
 
 ORG_RESPONSE = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -174,13 +234,15 @@ RESTAURANT_UPDATE_REQUEST = {
             'type': 'string',
         },
         'openingHours': RESTAURANT_OPENING_HOURS,
+        'imageSet': IMAGE_SET
     },
     'anyOf': [
         {'required': ['name']},
         {'required': ['description']},
         {'required': ['keywords']},
         {'required': ['address']},
-        {'required': ['openingHours']}
+        {'required': ['openingHours']},
+        {'required': ['imageSet']}
     ],
     'additionalProperties': False
 }

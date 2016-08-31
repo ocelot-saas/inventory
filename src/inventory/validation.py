@@ -17,6 +17,30 @@ class Error(Exception):
         return 'Validation error! Reason:\n {}'.format(str(self._reason))
 
 
+class ImageSetValidator(object):
+    """Validator for an image set."""
+
+    def __init__(self):
+        pass
+
+    def validate(self, image_set_raw):
+        try:
+            jsonschema.validate(image_set_raw, schemas.IMAGE_SET)
+
+            for i in range(len(image_set_raw)):
+                if image_set_raw[i]['orderNo'] != i:
+                    raise Error('Image set not properly ordered')
+
+                image_set_raw[i]['url'] = image_set_raw[i]['url'].strip()
+
+                if image_set_raw[i]['url'] == '':
+                    raise Error('Image set url is empty')
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate image set') from e
+
+        return image_set_raw
+    
+
 class RestaurantNameValidator(object):
     """Validator for a restaurant name."""
 
@@ -132,12 +156,13 @@ class OrgCreationRequestValidator(object):
 
     def __init__(self, restaurant_name_validator, restaurant_description_validator,
                  restaurant_keywords_validator, restaurant_address_validator,
-                 restaurant_opening_hours_validator):
+                 restaurant_opening_hours_validator, image_set_validator):
         self._restaurant_name_validator = restaurant_name_validator
         self._restaurant_description_validator = restaurant_description_validator
         self._restaurant_keywords_validator = restaurant_keywords_validator
         self._restaurant_address_validator = restaurant_address_validator
         self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
+        self._image_set_validator = image_set_validator
 
     def validate(self, org_creation_request_raw):
         try:
@@ -155,6 +180,9 @@ class OrgCreationRequestValidator(object):
             org_creation_request['openingHours'] = \
                 self._restaurant_opening_hours_validator.validate(
                     org_creation_request['openingHours'])
+
+            org_creation_request['imageSet'] = \
+                self._image_set_validator.validate(org_creation_request['imageSet'])
         except ValueError as e:
             raise Error('Could not decode org creation request') from e
         except jsonschema.ValidationError as e:
@@ -172,12 +200,13 @@ class RestaurantUpdateRequestValidator(object):
 
     def __init__(self, restaurant_name_validator, restaurant_description_validator,
                  restaurant_keywords_validator, restaurant_address_validator,
-                 restaurant_opening_hours_validator):
+                 restaurant_opening_hours_validator, image_set_validator):
         self._restaurant_name_validator = restaurant_name_validator
         self._restaurant_description_validator = restaurant_description_validator
         self._restaurant_keywords_validator = restaurant_keywords_validator
         self._restaurant_address_validator = restaurant_address_validator
         self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
+        self._image_set_validator = image_set_validator
 
     def validate(self, restaurant_update_request_raw):
         try:
@@ -207,6 +236,11 @@ class RestaurantUpdateRequestValidator(object):
                 restaurant_update_request['openingHours'] = \
                     self._restaurant_opening_hours_validator.validate(
                         restaurant_update_request['openingHours'])
+
+            if 'imageSet' in restaurant_update_request:
+                restaurant_update_request['imageSet'] = \
+                    self._image_set_validator.validate(
+                        restaurant_update_request['imageSet'])
         except ValueError as e:
             raise Error('Could not decode restaurant update request') from e
         except jsonschema.ValidationError as e:
