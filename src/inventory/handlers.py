@@ -79,6 +79,7 @@ class OrgResource(object):
             org_creation_request = \
                 self._org_creation_request_validator.validate(org_creation_request_raw)
         except validation.Error as e:
+            raise e
             raise falcon.HTTPBadRequest(
                 title='Invalid org creation data',
                 description='Invalid data "{}"'.format(org_creation_request_raw)) from e

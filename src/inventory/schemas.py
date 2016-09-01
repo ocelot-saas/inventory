@@ -37,6 +37,60 @@ INTERVAL_IN_DAY = {
     'additionalProperties': False,
 }
 
+
+# TODO(horia141): keep in sync with frontend
+IMAGE_ASPECT_RATIO = 16/9
+IMAGE_MIN_WIDTH = 800
+IMAGE_MIN_HEIGHT = 450
+IMAGE_MAX_WIDTH = 1600
+IMAGE_MAX_HEIGHT = 900
+IMAGE_WIDTH = IMAGE_MAX_WIDTH
+IMAGE_HEIGHT = IMAGE_MAX_HEIGHT
+
+
+IMAGE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Image',
+    'description': 'An image',
+    'type': 'object',
+    'properties': {
+        'orderNo': {
+            'description': 'The order in which the image appears for display',
+            'type': 'integer',
+            'minimum': 0
+        },
+        'uri': {
+            'description': 'The URI where the image can be retrieved',
+            'type': 'string',
+        },
+        'width': {
+            'description': 'The width of the image',
+            'type': 'integer',
+            'minimum': IMAGE_MIN_WIDTH,
+            'maximum': IMAGE_MAX_WIDTH
+        },
+        'height': {
+            'description': 'The height of the image',
+            'type': 'integer',
+            'minimum': IMAGE_MIN_HEIGHT,
+            'maximum': IMAGE_MAX_HEIGHT
+        }
+    },
+    'required': ['orderNo', 'uri', 'width', 'height'],
+    'additionalProperties': False
+}
+
+
+IMAGE_SET = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Image set',
+    'description': 'A set of images',
+    'type': 'array',
+    'items': IMAGE,
+    'additionalItems': False
+}
+
+
 RESTAURANT_KEYWORDS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Restaurant keywords',
@@ -97,60 +151,6 @@ RESTAURANT = {
     'required': ['id', 'timeCreatedTs', 'name', 'description', 'keywords',
                  'address', 'openingHours', 'imageSet'],
     'additionalProperties': False
-}
-
-
-# TODO(horia141): keep in sync with frontend
-IMAGE_ASPECT_RATIO = 16/9
-IMAGE_MIN_WIDTH = 800
-IMAGE_MIN_HEIGHT = 450
-IMAGE_MAX_WIDTH = 1600
-IMAGE_MAX_HEIGHT = 900
-IMAGE_WIDTH = IMAGE_MAX_WIDTH
-IMAGE_HEIGHT = IMAGE_MAX_HEIGHT
-
-IMAGE = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'title': 'Image',
-    'description': 'An image',
-    'type': 'object',
-    'properties': {
-        'orderNo': {
-            'description': 'The order in which the image appears for display',
-            'type': 'integer',
-            'minimum': 0
-        },
-        'uri': {
-            'description': 'The URI where the image can be retrieved',
-            'type': 'string',
-        },
-        'width': {
-            'description': 'The width of the image',
-            'type': 'integer',
-            'minimum': IMAGE_MIN_WIDTH,
-            'maximum': IMAGE_MAX_WIDTH
-        },
-        'height': {
-            'description': 'The height of the image',
-            'type': 'integer',
-            'minimum': IMAGE_MIN_HEIGHT,
-            'maximum': IMAGE_MAX_HEIGHT
-        }
-    },
-    'required': ['uri', 'width', 'height'],
-    'additionalProperties': False
-}
-
-
-IMAGE_SET = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'title': 'Image set',
-    'description': 'A set of images',
-    'type': 'array',
-    'items': {
-        'type': IMAGE
-    },
-    'additionalItems': False
 }
 
 
