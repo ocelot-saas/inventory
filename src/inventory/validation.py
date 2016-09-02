@@ -31,9 +31,9 @@ class ImageSetValidator(object):
                 if image_set_raw[i]['orderNo'] != i:
                     raise Error('Image set not properly ordered')
 
-                image_set_raw[i]['url'] = image_set_raw[i]['url'].strip()
+                image_set_raw[i]['uri'] = image_set_raw[i]['uri'].strip()
 
-                if image_set_raw[i]['url'] == '':
+                if image_set_raw[i]['uri'] == '':
                     raise Error('Image set url is empty')
         except jsonschema.ValidationError as e:
             raise Error('Could not structurally validate image set') from e

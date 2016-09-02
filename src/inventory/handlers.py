@@ -238,7 +238,6 @@ class RestaurantResource(object):
             restaurant_update_request = \
                 self._restaurant_update_request_validator.validate(restaurant_update_request_raw)
         except validation.Error as e:
-            raise e
             raise falcon.HTTPBadRequest(
                 title='Invalid restaurant update data',
                 description='Invalid data "{}"'.format(restaurant_update_request_raw)) from e
@@ -271,7 +270,7 @@ class RestaurantResource(object):
                 'keywords': [kw for kw in restaurant_row['keywords']],
                 'address': restaurant_row['address'],
                 'openingHours': restaurant_row['opening_hours'],
-                'imageSet': request_row['image_set']
+                'imageSet': restaurant_row['image_set']
             }
         }
         
