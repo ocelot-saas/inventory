@@ -31,10 +31,11 @@ setup(
         # Duplicated from requirements.txt.
         'clock==0.0.5',
         'falcon>=1,<2',
-        'identity>=1,<2',
         'gunicorn>=19,<20',
+        'identity>=1,<2',
         'jsonschema>=2,<3',
         'psycopg2>=2,<3',
+        'python-slugify>=1,<2',
         'pytz==2016.4',
         'sqlalchemy>=1,<2',
         'yoyo-migrations>=5,<6'

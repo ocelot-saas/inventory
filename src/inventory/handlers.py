@@ -4,6 +4,7 @@ import json
 import hashlib
 
 import falcon
+import slugify
 
 import inventory.config as config
 import inventory.validation as validation
@@ -47,14 +48,14 @@ _platforms_website = sql.Table(
     sql.Column('subdomain', sql.Text()))
 
 _platforms_callcenter = sql.Table(
-    'platforms_website', _metadata,
+    'platforms_callcenter', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
     sql.Column('phone_number', sql.Text()))
 
 _platforms_emailcenter = sql.Table(
-    'platforms_website', _metadata,
+    'platforms_emailcenter', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
@@ -133,9 +134,36 @@ class OrgResource(object):
                         opening_hours=org_creation_request['openingHours'],
                         image_set=org_creation_request['imageSet'])
 
-                result = conn.execute(create_restaurant)
-                restaurant_id = result.inserted_primary_key[0]
-                result.close()
+                conn.execute(create_restaurant).close()
+
+                # Create basic plaforms with basic info
+
+                create_platforms_website = _platforms_website \
+                    .insert() \
+                    .values(
+                        org_id=org_id,
+                        time_created=right_now,
+                        subdomain=slugify.slugify(org_creation_request['name']))
+
+                conn.execute(create_platforms_website).close()
+
+                create_platforms_callcenter = _platforms_callcenter \
+                    .insert() \
+                    .values(
+                        org_id=org_id,
+                        time_created=right_now,
+                        phone_number='')
+
+                conn.execute(create_platforms_callcenter).close()
+
+                create_platforms_emailcenter = _platforms_emailcenter \
+                    .insert() \
+                    .values(
+                        org_id=org_id,
+                        time_created=right_now,
+                        email_name='contact')
+
+                conn.execute(create_platforms_emailcenter).close()
             except sql.exc.IntegrityError as e:
                 raise falcon.HTTPConflict(
                     title='Org already exists',
