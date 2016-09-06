@@ -11,7 +11,7 @@ CREATE TABLE inventory.platforms_website (
     id SERIAL,
     org_id INTEGER NOT NULL,
     time_created TIMESTAMP NOT NULL,
-    domain_prefix TEXT NOT NULL,
+    subdomain TEXT NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT platforms_website_fk_org_id
         FOREIGN KEY (org_id) REFERENCES inventory.org(id),

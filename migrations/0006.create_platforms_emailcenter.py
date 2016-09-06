@@ -11,7 +11,7 @@ CREATE TABLE inventory.platforms_emailcenter (
     id SERIAL,
     org_id INTEGER NOT NULL,
     time_created TIMESTAMP NOT NULL,
-    email_address TEXT NOT NULL,
+    email_name TEXT NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT platforms_emailcenter_fk_org_id
         FOREIGN KEY (org_id) REFERENCES inventory.org(id),

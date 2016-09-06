@@ -32,13 +32,33 @@ _restaurant = sql.Table(
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('name', sql.String(100)),
+    sql.Column('name', sql.Text()),
     sql.Column('description', sql.Text()),
     sql.Column('keywords', postgresql.ARRAY(sql.Text)),
     sql.Column('address', sql.Text()),
     sql.Column('opening_hours', postgresql.JSON()),
     sql.Column('image_set', postgresql.JSON()))
 
+_platforms_website = sql.Table(
+    'platforms_website', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('subdomain', sql.Text()))
+
+_platforms_callcenter = sql.Table(
+    'platforms_website', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('phone_number', sql.Text()))
+
+_platforms_emailcenter = sql.Table(
+    'platforms_website', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('email_name', sql.Text()))
 
 _RESTAURANT_E2I_FIELD_NAMES = {
     'name': 'name',
