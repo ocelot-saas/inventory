@@ -70,6 +70,10 @@ _RESTAURANT_E2I_FIELD_NAMES = {
     'imageSet': 'image_set'
 }
 
+_PLATFORMS_WEBSITE_E2I_FIELD_NAMES = {
+    'subdomain': 'subdomain'
+}
+
 
 class OrgResource(object):
     """The collection of organizations."""
@@ -331,7 +335,7 @@ class RestaurantResource(object):
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT')
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
     def _fetch_restaurant(self, conn, user_id):
@@ -356,3 +360,125 @@ class RestaurantResource(object):
         result.close()
 
         return restaurant_row
+
+
+class PlatformsWebsiteResource(object):
+    """The website platform for an organization."""
+
+    def __init__(self, platforms_website_update_request_validator, the_clock, sql_engine):
+        self._platforms_website_update_request_validator = \
+            platforms_website_update_request_validator
+        self._the_clock = the_clock
+        self._sql_engine = sql_engine
+
+        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
+        
+    def on_options(self, req, resp):
+        """Check CORS is OK."""
+
+        resp.status = falcon.HTTP_204
+        self._cors_response(resp)
+
+    def on_get(self, req, resp):
+        """Get the website platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        with self._sql_engine.begin() as conn:
+            platforms_website_row = self._fetch_platforms_website(conn, user['id'])
+
+            if platforms_website_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Website does not exist',
+                    description='Website does not exist')
+
+        response = {
+            'platformsWebsite': {
+                'id': platforms_website_row['id'],
+                'timeCreatedTs': int(platforms_website_row['time_created'].timestamp()),
+                'subdomain': platforms_website_row['subdomain']
+            }
+        }
+
+        jsonschema.validate(response, schemas.PLATFORMS_WEBSITE_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def on_put(self, req, resp):
+        """Update the website platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        try:
+            platforms_website_update_request_raw = req.stream.read().decode('utf-8')
+            platforms_website_update_request = \
+                self._platforms_website_update_request_validator.validate(
+                    platforms_website_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid website update data',
+                description='Invalid data "{}"'.format(platforms_website_update_request_raw)) from e
+
+        with self._sql_engine.begin() as conn:
+            platforms_website_row = self._fetch_platforms_website(conn, user['id'])
+
+            if platforms_website_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Website does not exist',
+                    description='Website does not exist')
+
+            properties_to_update = dict(
+                (_PLATFORMS_WEBSITE_E2I_FIELD_NAMES[k], v) for (k, v)
+                in platforms_website_update_request.items())
+
+            update_platforms_website = _platforms_website \
+                .update() \
+                .where(_platforms_website.c.id == platforms_website_row['id']) \
+                .values(**properties_to_update)
+
+            result = conn.execute(update_platforms_website)
+            result.close()
+
+        response = {
+            'platformsWebsite': {
+                'id': platforms_website_row['id'],
+                'timeCreatedTs': int(platforms_website_row['time_created'].timestamp()),
+                'subdomain': platforms_website_row['subdomain']
+            }
+        }
+        
+        response['platformsWebsite'].update(platforms_website_update_request)
+
+        jsonschema.validate(response, schemas.PLATFORMS_WEBSITE_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def _cors_response(self, resp):
+        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
+        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+    def _fetch_platforms_website(self, conn, user_id):
+        fetch_platforms_website = sql.sql \
+            .select([
+                _platforms_website.c.id,
+                _platforms_website.c.time_created,
+                _platforms_website.c.subdomain
+                ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_website,
+                               _platforms_website.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_platforms_website)
+        platforms_website_row = result.fetchone()
+        result.close()
+
+        return platforms_website_row

@@ -14,9 +14,6 @@ import sqlalchemy
 
 auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
 
-# /org
-#   POST creates the general info about the organization and restaurant
-#   GET retrieves general information about the organization and the restaurant
 app = falcon.API(middleware=[auth_middleware])
 
 restaurant_name_validator = validation.RestaurantNameValidator()
@@ -39,6 +36,7 @@ restaurant_update_request_validator = validation.RestaurantUpdateRequestValidato
     restaurant_address_validator=restaurant_address_validator,
     restaurant_opening_hours_validator=restaurant_opening_hours_validator,
     image_set_validator=image_set_validator)
+platforms_website_update_request_validator = validation.PlatformsWebsiteUpdateRequestValidator()
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
 
@@ -52,8 +50,14 @@ restaurant_resource = inventory.RestaurantResource(
     the_clock=the_clock,
     sql_engine=sql_engine)
 
+platforms_website_resource = inventory.PlatformsWebsiteResource(
+    platforms_website_update_request_validator=platforms_website_update_request_validator,
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
 app.add_route('/org', org_resource)
 app.add_route('/org/restaurant', restaurant_resource)
+app.add_route('/org/platforms/website', platforms_website_resource)
 
 
 def main():

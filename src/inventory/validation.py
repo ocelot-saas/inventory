@@ -3,8 +3,10 @@
 import datetime
 import json
 
-import inventory.schemas as schemas
 import jsonschema
+import slugify
+
+import inventory.schemas as schemas
 
 
 class Error(Exception):
@@ -251,3 +253,33 @@ class RestaurantUpdateRequestValidator(object):
             raise Error('Other error') from e
 
         return restaurant_update_request
+
+
+class PlatformsWebsiteUpdateRequestValidator(object):
+    """Validator for a website platform."""
+
+    def __init__(self):
+        pass
+
+    def validate(self, platforms_website_update_request_raw):
+        try:
+            platforms_website_update_request = json.loads(platforms_website_update_request_raw)
+            jsonschema.validate(
+                platforms_website_update_request,
+                schemas.PLATFORMS_WEBSITE_UPDATE_REQUEST)
+
+            if 'subdomain' in platforms_website_update_request:
+                subdomain = platforms_website_update_request['subdomain']
+
+                if not subdomain == slugify.slugify(subdomain):
+                    raise Error('Subdomain {} is not valid'.format(subdomain))
+        except ValueError as e:
+            raise Error('Could not decode website update request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate website update request') from e
+        except Error as e:
+            raise Error('Could not validate website update request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return platforms_website_update_request

@@ -154,6 +154,30 @@ RESTAURANT = {
 }
 
 
+PLATFORMS_WEBSITE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Website platform',
+    'description': 'Information about a website platform',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the website platform',
+            'type': 'integer',
+        },
+        'timeCreatedTs': {
+            'description': 'The time the website platform was created, in UTC',
+            'type': 'integer',
+        },
+        'subdomain': {
+            'description': 'The subdomain to assign to the website',
+            'type': 'string'
+        }
+    },
+    'required': ['id', 'timeCreatedTs', 'subdomain'],
+    'additionalProperties': False
+}
+
+
 ORG = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Org',
@@ -257,5 +281,36 @@ RESTAURANT_RESPONSE = {
         'restaurant': RESTAURANT
     },
     'required': ['restaurant'],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_WEBSITE_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Website platforms update request',
+    'description': 'Request for updating the website platform',
+    'type': 'object',
+    'properties': {
+        'subdomain': {
+            'description': 'The subdomain of the website',
+            'type': 'string',
+        }
+    },
+    'anyOf': [
+        {'required': ['subdomain']}
+    ],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_WEBSITE_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Website platfrom response',
+    'description': 'Common response for website platform',
+    'type': 'object',
+    'properties': {
+        'platformsWebsite': PLATFORMS_WEBSITE
+    },
+    'required': ['platformsWebsite'],
     'additionalProperties': False
 }
