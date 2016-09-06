@@ -24,5 +24,5 @@ CREATE TABLE inventory.restaurant (
         UNIQUE (org_id)
 );
 """, """
-DROP TABLE IF EXISTS identity.restaurant;
+DROP TABLE IF EXISTS inventory.restaurant;
 """);
