@@ -178,6 +178,30 @@ PLATFORMS_WEBSITE = {
 }
 
 
+PLATFORMS_CALLCENTER = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Callcenter platform',
+    'description': 'Information about a callcenter platform',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the callcenter platform',
+            'type': 'integer',
+        },
+        'timeCreatedTs': {
+            'description': 'The time the callcenter platform was created, in UTC',
+            'type': 'integer',
+        },
+        'phoneNumber': {
+            'description': 'The phone number to assign to the callcenter',
+            'type': 'string'
+        }
+    },
+    'required': ['id', 'timeCreatedTs', 'phoneNumber'],
+    'additionalProperties': False
+}
+
+
 ORG = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Org',
@@ -312,5 +336,36 @@ PLATFORMS_WEBSITE_RESPONSE = {
         'platformsWebsite': PLATFORMS_WEBSITE
     },
     'required': ['platformsWebsite'],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_CALLCENTER_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Callcenter platforms update request',
+    'description': 'Request for updating the callcenter platform',
+    'type': 'object',
+    'properties': {
+        'phoneNumber': {
+            'description': 'The phone number of the callcenter',
+            'type': 'string',
+        }
+    },
+    'anyOf': [
+        {'required': ['phoneNumber']}
+    ],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_CALLCENTER_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Callcenter platfrom response',
+    'description': 'Common response for callcenter platform',
+    'type': 'object',
+    'properties': {
+        'platformsCallcenter': PLATFORMS_CALLCENTER
+    },
+    'required': ['platformsCallcenter'],
     'additionalProperties': False
 }

@@ -75,6 +75,11 @@ _PLATFORMS_WEBSITE_E2I_FIELD_NAMES = {
 }
 
 
+_PLATFORMS_CALLCENTER_E2I_FIELD_NAMES = {
+    'phoneNumber': 'phone_number'
+}
+
+
 class OrgResource(object):
     """The collection of organizations."""
 
@@ -482,3 +487,125 @@ class PlatformsWebsiteResource(object):
         result.close()
 
         return platforms_website_row
+
+
+class PlatformsCallcenterResource(object):
+    """The callcenter platform for an organization."""
+
+    def __init__(self, platforms_callcenter_update_request_validator, the_clock, sql_engine):
+        self._platforms_callcenter_update_request_validator = \
+            platforms_callcenter_update_request_validator
+        self._the_clock = the_clock
+        self._sql_engine = sql_engine
+
+        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
+        
+    def on_options(self, req, resp):
+        """Check CORS is OK."""
+
+        resp.status = falcon.HTTP_204
+        self._cors_response(resp)
+
+    def on_get(self, req, resp):
+        """Get the callcenter platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        with self._sql_engine.begin() as conn:
+            platforms_callcenter_row = self._fetch_platforms_callcenter(conn, user['id'])
+
+            if platforms_callcenter_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Callcenter does not exist',
+                    description='Callcenter does not exist')
+
+        response = {
+            'platformsCallcenter': {
+                'id': platforms_callcenter_row['id'],
+                'timeCreatedTs': int(platforms_callcenter_row['time_created'].timestamp()),
+                'phoneNumber': platforms_callcenter_row['phone_number']
+            }
+        }
+
+        jsonschema.validate(response, schemas.PLATFORMS_CALLCENTER_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def on_put(self, req, resp):
+        """Update the callcenter platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        try:
+            platforms_callcenter_update_request_raw = req.stream.read().decode('utf-8')
+            platforms_callcenter_update_request = \
+                self._platforms_callcenter_update_request_validator.validate(
+                    platforms_callcenter_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid callcenter update data',
+                description='Invalid data "{}"'.format(platforms_callcenter_update_request_raw)) from e
+
+        with self._sql_engine.begin() as conn:
+            platforms_callcenter_row = self._fetch_platforms_callcenter(conn, user['id'])
+
+            if platforms_callcenter_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Callcenter does not exist',
+                    description='Callcenter does not exist')
+
+            properties_to_update = dict(
+                (_PLATFORMS_CALLCENTER_E2I_FIELD_NAMES[k], v) for (k, v)
+                in platforms_callcenter_update_request.items())
+
+            update_platforms_callcenter = _platforms_callcenter \
+                .update() \
+                .where(_platforms_callcenter.c.id == platforms_callcenter_row['id']) \
+                .values(**properties_to_update)
+
+            result = conn.execute(update_platforms_callcenter)
+            result.close()
+
+        response = {
+            'platformsCallcenter': {
+                'id': platforms_callcenter_row['id'],
+                'timeCreatedTs': int(platforms_callcenter_row['time_created'].timestamp()),
+                'phoneNumber': platforms_callcenter_row['phone_number']
+            }
+        }
+        
+        response['platformsCallcenter'].update(platforms_callcenter_update_request)
+
+        jsonschema.validate(response, schemas.PLATFORMS_CALLCENTER_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def _cors_response(self, resp):
+        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
+        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+    def _fetch_platforms_callcenter(self, conn, user_id):
+        fetch_platforms_callcenter = sql.sql \
+            .select([
+                _platforms_callcenter.c.id,
+                _platforms_callcenter.c.time_created,
+                _platforms_callcenter.c.phone_number
+                ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_callcenter,
+                               _platforms_callcenter.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_platforms_callcenter)
+        platforms_callcenter_row = result.fetchone()
+        result.close()
+
+        return platforms_callcenter_row

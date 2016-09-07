@@ -3,6 +3,7 @@
 import datetime
 import json
 
+import phonenumbers
 import jsonschema
 import slugify
 
@@ -277,9 +278,43 @@ class PlatformsWebsiteUpdateRequestValidator(object):
             raise Error('Could not decode website update request') from e
         except jsonschema.ValidationError as e:
             raise Error('Could not structurally validate website update request') from e
-        except Error as e:
-            raise Error('Could not validate website update request') from e
         except Exception as e:
             raise Error('Other error') from e
 
         return platforms_website_update_request
+
+
+class PlatformsCallcenterUpdateRequestValidator(object):
+    """Validator for a callcenter platform."""
+
+    def __init__(self):
+        pass
+
+    def validate(self, platforms_callcenter_update_request_raw):
+        try:
+            platforms_callcenter_update_request = \
+                json.loads(platforms_callcenter_update_request_raw)
+            jsonschema.validate(
+                platforms_callcenter_update_request,
+                schemas.PLATFORMS_CALLCENTER_UPDATE_REQUEST)
+
+            if 'phoneNumber' in platforms_callcenter_update_request:
+                phoneNumberRaw = platforms_callcenter_update_request['phoneNumber']
+                phoneNumber = phonenumbers.parse(phoneNumberRaw, "RO")
+
+                if not phonenumbers.is_possible_number(phoneNumber) or \
+                   not phonenumbers.is_valid_number(phoneNumber):
+                    raise Error('Phone number {} is not valid'.format(phoneNumber))
+
+                platforms_callcenter_update_request['phoneNumber'] = \
+                    phonenumbers.format_number(phoneNumber, phonenumbers.PhoneNumberFormat.NATIONAL)
+        except ValueError as e:
+            raise Error('Could not decode callcenter update request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate callcenter update request') from e
+        except phonenumbers.phonenumberutil.NumberParseException as e:
+            raise Error('Could not parse phone number') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return platforms_callcenter_update_request
