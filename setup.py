@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name='inventory',
-    version='0.4.0',
+    version='0.5.0',
     description='The inventory service for Ocelot, as a Python package.',
     long_description=readme(),
     keywords='ocelot inventory service rest api',
@@ -39,6 +39,7 @@ setup(
         'python-slugify>=1,<2',
         'pytz==2016.4',
         'sqlalchemy>=1,<2',
+        'validate_email>=1,<2',
         'yoyo-migrations>=5,<6'
         ],
     test_suite='tests',

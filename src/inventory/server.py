@@ -37,7 +37,10 @@ restaurant_update_request_validator = validation.RestaurantUpdateRequestValidato
     restaurant_opening_hours_validator=restaurant_opening_hours_validator,
     image_set_validator=image_set_validator)
 platforms_website_update_request_validator = validation.PlatformsWebsiteUpdateRequestValidator()
-platforms_callcenter_update_request_validator = validation.PlatformsCallcenterUpdateRequestValidator()
+platforms_callcenter_update_request_validator = \
+    validation.PlatformsCallcenterUpdateRequestValidator()
+platforms_emailcenter_update_request_validator = \
+    validation.PlatformsEmailcenterUpdateRequestValidator()
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
 
@@ -61,10 +64,16 @@ platforms_callcenter_resource = inventory.PlatformsCallcenterResource(
     the_clock=the_clock,
     sql_engine=sql_engine)
 
+platforms_emailcenter_resource = inventory.PlatformsEmailcenterResource(
+    platforms_emailcenter_update_request_validator=platforms_emailcenter_update_request_validator,
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
 app.add_route('/org', org_resource)
 app.add_route('/org/restaurant', restaurant_resource)
 app.add_route('/org/platforms/website', platforms_website_resource)
 app.add_route('/org/platforms/callcenter', platforms_callcenter_resource)
+app.add_route('/org/platforms/emailcenter', platforms_emailcenter_resource)
 
 
 def main():

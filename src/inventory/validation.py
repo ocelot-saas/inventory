@@ -3,9 +3,10 @@
 import datetime
 import json
 
-import phonenumbers
 import jsonschema
+import phonenumbers
 import slugify
+import validate_email
 
 import inventory.schemas as schemas
 
@@ -259,6 +260,8 @@ class RestaurantUpdateRequestValidator(object):
 class PlatformsWebsiteUpdateRequestValidator(object):
     """Validator for a website platform."""
 
+    MAX_DOMAIN_SIZE = 100
+
     def __init__(self):
         pass
 
@@ -271,6 +274,9 @@ class PlatformsWebsiteUpdateRequestValidator(object):
 
             if 'subdomain' in platforms_website_update_request:
                 subdomain = platforms_website_update_request['subdomain']
+
+                if len(subdomain) > self.MAX_DOMAIN_SIZE:
+                    raise Error('Subdomain is too long'.format(subdomain))
 
                 if not subdomain == slugify.slugify(subdomain):
                     raise Error('Subdomain {} is not valid'.format(subdomain))
@@ -299,15 +305,16 @@ class PlatformsCallcenterUpdateRequestValidator(object):
                 schemas.PLATFORMS_CALLCENTER_UPDATE_REQUEST)
 
             if 'phoneNumber' in platforms_callcenter_update_request:
-                phoneNumberRaw = platforms_callcenter_update_request['phoneNumber']
-                phoneNumber = phonenumbers.parse(phoneNumberRaw, "RO")
+                phone_number_raw = platforms_callcenter_update_request['phoneNumber']
+                phone_number = phonenumbers.parse(phone_number_raw, "RO")
 
-                if not phonenumbers.is_possible_number(phoneNumber) or \
-                   not phonenumbers.is_valid_number(phoneNumber):
-                    raise Error('Phone number {} is not valid'.format(phoneNumber))
+                if not phonenumbers.is_possible_number(phone_number) or \
+                   not phonenumbers.is_valid_number(phone_number):
+                    raise Error('Phone number {} is not valid'.format(phone_number))
 
                 platforms_callcenter_update_request['phoneNumber'] = \
-                    phonenumbers.format_number(phoneNumber, phonenumbers.PhoneNumberFormat.NATIONAL)
+                    phonenumbers.format_number(
+                        phone_number, phonenumbers.PhoneNumberFormat.NATIONAL)
         except ValueError as e:
             raise Error('Could not decode callcenter update request') from e
         except jsonschema.ValidationError as e:
@@ -318,3 +325,37 @@ class PlatformsCallcenterUpdateRequestValidator(object):
             raise Error('Other error') from e
 
         return platforms_callcenter_update_request
+
+
+class PlatformsEmailcenterUpdateRequestValidator(object):
+    """Validator for a emailcenter platform."""
+
+    MAX_EMAIL_NAME_SIZE = 100
+
+    def __init__(self):
+        pass
+
+    def validate(self, platforms_emailcenter_update_request_raw):
+        try:
+            platforms_emailcenter_update_request = \
+                json.loads(platforms_emailcenter_update_request_raw)
+            jsonschema.validate(
+                platforms_emailcenter_update_request,
+                schemas.PLATFORMS_EMAILCENTER_UPDATE_REQUEST)
+
+            if 'emailName' in platforms_emailcenter_update_request:
+                email_name = platforms_emailcenter_update_request['emailName']
+
+                if len(email_name) > self.MAX_EMAIL_NAME_SIZE:
+                    raise Error('Email name is too long'.format(email_name))
+
+                if not validate_email.validate_email('{}@example.com'.format(email_name)):
+                    raise Error('Email name {} is invalid'.format(email_name))
+        except ValueError as e:
+            raise Error('Could not decode emailcenter update request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate emailcenter update request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return platforms_emailcenter_update_request

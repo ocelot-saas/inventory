@@ -80,6 +80,11 @@ _PLATFORMS_CALLCENTER_E2I_FIELD_NAMES = {
 }
 
 
+_PLATFORMS_EMAILCENTER_E2I_FIELD_NAMES = {
+    'emailName': 'email_name'
+}
+
+
 class OrgResource(object):
     """The collection of organizations."""
 
@@ -609,3 +614,125 @@ class PlatformsCallcenterResource(object):
         result.close()
 
         return platforms_callcenter_row
+
+
+class PlatformsEmailcenterResource(object):
+    """The emailcenter platform for an organization."""
+
+    def __init__(self, platforms_emailcenter_update_request_validator, the_clock, sql_engine):
+        self._platforms_emailcenter_update_request_validator = \
+            platforms_emailcenter_update_request_validator
+        self._the_clock = the_clock
+        self._sql_engine = sql_engine
+
+        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
+        
+    def on_options(self, req, resp):
+        """Check CORS is OK."""
+
+        resp.status = falcon.HTTP_204
+        self._cors_response(resp)
+
+    def on_get(self, req, resp):
+        """Get the emailcenter platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        with self._sql_engine.begin() as conn:
+            platforms_emailcenter_row = self._fetch_platforms_emailcenter(conn, user['id'])
+
+            if platforms_emailcenter_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Emailcenter does not exist',
+                    description='Emailcenter does not exist')
+
+        response = {
+            'platformsEmailcenter': {
+                'id': platforms_emailcenter_row['id'],
+                'timeCreatedTs': int(platforms_emailcenter_row['time_created'].timestamp()),
+                'emailName': platforms_emailcenter_row['email_name']
+            }
+        }
+
+        jsonschema.validate(response, schemas.PLATFORMS_EMAILCENTER_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def on_put(self, req, resp):
+        """Update the emailcenter platform for an organization."""
+
+        self._cors_response(resp)
+
+        user = req.context['user']
+
+        try:
+            platforms_emailcenter_update_request_raw = req.stream.read().decode('utf-8')
+            platforms_emailcenter_update_request = \
+                self._platforms_emailcenter_update_request_validator.validate(
+                    platforms_emailcenter_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid emailcenter update data',
+                description='Invalid data "{}"'.format(platforms_emailcenter_update_request_raw)) from e
+
+        with self._sql_engine.begin() as conn:
+            platforms_emailcenter_row = self._fetch_platforms_emailcenter(conn, user['id'])
+
+            if platforms_emailcenter_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Emailcenter does not exist',
+                    description='Emailcenter does not exist')
+
+            properties_to_update = dict(
+                (_PLATFORMS_EMAILCENTER_E2I_FIELD_NAMES[k], v) for (k, v)
+                in platforms_emailcenter_update_request.items())
+
+            update_platforms_emailcenter = _platforms_emailcenter \
+                .update() \
+                .where(_platforms_emailcenter.c.id == platforms_emailcenter_row['id']) \
+                .values(**properties_to_update)
+
+            result = conn.execute(update_platforms_emailcenter)
+            result.close()
+
+        response = {
+            'platformsEmailcenter': {
+                'id': platforms_emailcenter_row['id'],
+                'timeCreatedTs': int(platforms_emailcenter_row['time_created'].timestamp()),
+                'emailName': platforms_emailcenter_row['email_name']
+            }
+        }
+        
+        response['platformsEmailcenter'].update(platforms_emailcenter_update_request)
+
+        jsonschema.validate(response, schemas.PLATFORMS_EMAILCENTER_RESPONSE)
+
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)
+
+    def _cors_response(self, resp):
+        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
+        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
+        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+
+    def _fetch_platforms_emailcenter(self, conn, user_id):
+        fetch_platforms_emailcenter = sql.sql \
+            .select([
+                _platforms_emailcenter.c.id,
+                _platforms_emailcenter.c.time_created,
+                _platforms_emailcenter.c.email_name
+                ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_emailcenter,
+                               _platforms_emailcenter.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_platforms_emailcenter)
+        platforms_emailcenter_row = result.fetchone()
+        result.close()
+
+        return platforms_emailcenter_row

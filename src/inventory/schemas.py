@@ -202,6 +202,30 @@ PLATFORMS_CALLCENTER = {
 }
 
 
+PLATFORMS_EMAILCENTER = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Emailcenter platform',
+    'description': 'Information about a emailcenter platform',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the emailcenter platform',
+            'type': 'integer',
+        },
+        'timeCreatedTs': {
+            'description': 'The time the emailcenter platform was created, in UTC',
+            'type': 'integer',
+        },
+        'emailName': {
+            'description': 'The email name to assign to the emailcenter',
+            'type': 'string'
+        }
+    },
+    'required': ['id', 'timeCreatedTs', 'emailName'],
+    'additionalProperties': False
+}
+
+
 ORG = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Org',
@@ -367,5 +391,36 @@ PLATFORMS_CALLCENTER_RESPONSE = {
         'platformsCallcenter': PLATFORMS_CALLCENTER
     },
     'required': ['platformsCallcenter'],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_EMAILCENTER_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Emailcenter platforms update request',
+    'description': 'Request for updating the emailcenter platform',
+    'type': 'object',
+    'properties': {
+        'emailName': {
+            'description': 'The email name of the emailcenter',
+            'type': 'string',
+        }
+    },
+    'anyOf': [
+        {'required': ['emailName']}
+    ],
+    'additionalProperties': False
+}
+
+
+PLATFORMS_EMAILCENTER_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Emailcenter platfrom response',
+    'description': 'Common response for emailcenter platform',
+    'type': 'object',
+    'properties': {
+        'platformsEmailcenter': PLATFORMS_EMAILCENTER
+    },
+    'required': ['platformsEmailcenter'],
     'additionalProperties': False
 }
