@@ -16,7 +16,9 @@ CREATE TABLE inventory.menu_section (
     description TEXT NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT menu_section_fk_org_id
-        FOREIGN KEY (org_id) REFERENCES inventory.org(id)
+        FOREIGN KEY (org_id) REFERENCES inventory.org(id),
+    CONSTRAINT menu_section_uk_id_org_id
+        UNIQUE (id, org_id)
 );
 
 CREATE TABLE inventory.menu_item (
@@ -31,8 +33,10 @@ CREATE TABLE inventory.menu_item (
     ingredients JSON NOT NULL,
     image_set JSON NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT menu_item_fk_section_id_org_if
-        FOREIGN KEY (section_id, org_id) REFERENCES inventory.menu_section(id, org_id)
+    CONSTRAINT menu_item_fk_section_id_org_id
+        FOREIGN KEY (section_id, org_id) REFERENCES inventory.menu_section(id, org_id),
+    CONSTRAINT menu_item_uk_id_section_id_org_id
+        UNIQUE (id, section_id, org_id)
 );
 """, """
 DROP TABLE IF EXISTS inventory.menu_item;
