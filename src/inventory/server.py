@@ -54,6 +54,22 @@ restaurant_resource = inventory.RestaurantResource(
     the_clock=the_clock,
     sql_engine=sql_engine)
 
+menu_sections_resource = inventory.MenuSectionsResource(
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
+menu_section_resource = inventory.MenuSectionResource(
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
+menu_items_resource = inventory.MenuItemsResource(
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
+menu_item_resource = inventory.MenuItemResource(
+    the_clock=the_clock,
+    sql_engine=sql_engine)
+
 platforms_website_resource = inventory.PlatformsWebsiteResource(
     platforms_website_update_request_validator=platforms_website_update_request_validator,
     the_clock=the_clock,
@@ -71,6 +87,10 @@ platforms_emailcenter_resource = inventory.PlatformsEmailcenterResource(
 
 app.add_route('/org', org_resource)
 app.add_route('/org/restaurant', restaurant_resource)
+app.add_route('/org/menu/sections', menu_sections_resource)
+app.add_route('/org/menu/sections/{section_id}', menu_section_resource)
+app.add_route('/org/menu/sections/{section_id}/items', menu_items_resource)
+app.add_route('/org/menu/sections/{section_id}/items/{item_id}', menu_item_resource)
 app.add_route('/org/platforms/website', platforms_website_resource)
 app.add_route('/org/platforms/callcenter', platforms_callcenter_resource)
 app.add_route('/org/platforms/emailcenter', platforms_emailcenter_resource)

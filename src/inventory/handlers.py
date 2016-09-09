@@ -398,6 +398,25 @@ class RestaurantResource(object):
         return restaurant_row
 
 
+class MenuSectionsResource(object):
+    """A section in the menu for an organization."""
+
+    def __init__(self, the_clock, sql_engine):
+        self._the_clock = the_clock
+        self._sql_engine = sql_engine
+
+        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
+        
+    def on_options(self, req, resp):
+        """Check CORS is OK."""
+
+        resp.status = falcon.HTTP_204
+        self._cors_response(resp)
+
+    def on_get(self, req, resp):
+        """Get a particular 
+
+
 class PlatformsWebsiteResource(object):
     """The website platform for an organization."""
 
