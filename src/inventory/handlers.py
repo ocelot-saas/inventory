@@ -40,6 +40,31 @@ _restaurant = sql.Table(
     sql.Column('opening_hours', postgresql.JSON()),
     sql.Column('image_set', postgresql.JSON()))
 
+_menu_section = sql.Table(
+    'menu_section', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id)),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
+    sql.Column('name', sql.Text()),
+    sql.Column('description', sql.Text()),
+    sql.UniqueConstraint('id', 'org_id', name='menu_section_uk_id_org_id'))
+
+_menu_item = sql.Table(
+    'menu_item', _metadata,
+    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('section_id', sql.Integer),
+    sql.Column('org_id', sql.Integer),
+    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
+    sql.Column('name', sql.Text()),
+    sql.Column('description', sql.Text()),
+    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
+    sql.Column('ingredients', postgresql.JSON()),
+    sql.Column('image_set', postgresql.JSON()),
+    sql.ForeignKeyConstraint(['section_id', 'org_id'], [_menu_section.c.id, _menu_section.c.org_id]),
+    sql.UniqueConstraint('id', 'section_id', 'org_id'))
+
 _platforms_website = sql.Table(
     'platforms_website', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
@@ -60,6 +85,7 @@ _platforms_emailcenter = sql.Table(
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
     sql.Column('email_name', sql.Text()))
+    
 
 _RESTAURANT_E2I_FIELD_NAMES = {
     'name': 'name',
