@@ -25,4 +25,4 @@ CREATE TABLE inventory.restaurant (
 );
 """, """
 DROP TABLE IF EXISTS inventory.restaurant;
-""");
+""")
