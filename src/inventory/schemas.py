@@ -154,6 +154,34 @@ RESTAURANT = {
 }
 
 
+MENU_SECTION = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu section',
+    'description': 'Information about a menu section',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the menu section',
+            'type': 'integer'
+        },
+        'timeCreatedTs': {
+            'description': 'The time the menu section was created, in UTC',
+            'type': 'integer',
+        },
+        'name': {
+            'description': 'The name of the menu section',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu section',
+            'type': 'string'
+        }
+    },
+    'required': ['id', 'timeCreatedTs', 'name', 'description'],
+    'additionalProperties': False
+}
+
+
 PLATFORMS_WEBSITE = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Website platform',
@@ -329,6 +357,42 @@ RESTAURANT_RESPONSE = {
         'restaurant': RESTAURANT
     },
     'required': ['restaurant'],
+    'additionalProperties': False
+}
+
+
+MENU_SECTION_CREATION_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu section creation request',
+    'description': 'Creation request for a menu section',
+    'type': 'object',
+    'properties': {
+        'name': {
+            'description': 'The name of the menu section',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu section',
+            'type': 'string'
+        },
+    },
+    'required': ['name', 'description'],
+    'additionalProperties': False
+}
+
+MENU_SECTIONS_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu sections response',
+    'description': 'Common response for menu sections',
+    'type': 'object',
+    'properties': {
+        'menuSections': {
+            'description': 'The menu sections',
+            'type': 'array',
+            'items': MENU_SECTION
+        }
+    },
+    'required': ['menuSections'],
     'additionalProperties': False
 }
 

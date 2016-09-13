@@ -36,6 +36,9 @@ restaurant_update_request_validator = validation.RestaurantUpdateRequestValidato
     restaurant_address_validator=restaurant_address_validator,
     restaurant_opening_hours_validator=restaurant_opening_hours_validator,
     image_set_validator=image_set_validator)
+menu_section_creation_request_validator = validation.MenuSectionCreationRequestValidator(
+    name_validator=restaurant_name_validator,
+    description_validator=restaurant_description_validator)
 platforms_website_update_request_validator = validation.PlatformsWebsiteUpdateRequestValidator()
 platforms_callcenter_update_request_validator = \
     validation.PlatformsCallcenterUpdateRequestValidator()
@@ -55,6 +58,7 @@ restaurant_resource = inventory.RestaurantResource(
     sql_engine=sql_engine)
 
 menu_sections_resource = inventory.MenuSectionsResource(
+    menu_section_creation_request_validator=menu_section_creation_request_validator,
     the_clock=the_clock,
     sql_engine=sql_engine)
 

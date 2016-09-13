@@ -257,6 +257,21 @@ class RestaurantUpdateRequestValidator(object):
         return restaurant_update_request
 
 
+class MenuSectionsCreationRequestValidator(object):
+    """Validator for a menu section."""
+
+    def __init__(self, name_validator, description_validator):
+        self._name_validator = name_validator
+        self._description_validator = description_validator
+
+    def validate(self, menu_section_creation_request_raw):
+        try:
+            menu_section_creation_request = json.loads(menu_section_creation_request_raw)
+            jsonschema.validate(
+                menu_section_creation_request
+                schemas.MENU_SECTION_CREATION_REQUEST)
+
+
 class PlatformsWebsiteUpdateRequestValidator(object):
     """Validator for a website platform."""
 

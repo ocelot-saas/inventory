@@ -140,7 +140,6 @@ class OrgResource(object):
             org_creation_request = \
                 self._org_creation_request_validator.validate(org_creation_request_raw)
         except validation.Error as e:
-            raise e
             raise falcon.HTTPBadRequest(
                 title='Invalid org creation data',
                 description='Invalid data "{}"'.format(org_creation_request_raw)) from e
@@ -229,18 +228,7 @@ class OrgResource(object):
         user = req.context['user']
 
         with self._sql_engine.begin() as conn:
-            fetch_org = sql.sql \
-                .select([
-                    _org.c.id,
-                    _org.c.time_created
-                    ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)) \
-                .where(_org_user.c.user_id == user['id'])
-
-            result = conn.execute(fetch_org)
-            org_row = result.fetchone()
-            result.close()
+            org_row = self.fetch_org_for_user(conn, user['id'])
 
             if org_row is None:
                 raise falcon.HTTPNotFound(
@@ -258,6 +246,23 @@ class OrgResource(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
+
+    @staticmethod
+    def fetch_org_for_user(conn, user_id):
+        fetch_org = sql.sql \
+            .select([
+                _org.c.id,
+                _org.c.time_created
+            ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_org)
+        org_row = result.fetchone()
+        result.close()
+
+        return org_row
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
@@ -401,7 +406,8 @@ class RestaurantResource(object):
 class MenuSectionsResource(object):
     """All the sections in the menu for an organization."""
 
-    def __init__(self, the_clock, sql_engine):
+    def __init__(self, menu_section_creation_request_validator, the_clock, sql_engine):
+        self._menu_section_creation_request_validator = menu_section_creation_request_validator
         self._the_clock = the_clock
         self._sql_engine = sql_engine
 
@@ -417,19 +423,89 @@ class MenuSectionsResource(object):
         """Create a menu section."""
 
         self._cors_response(resp)
+
+        right_now = self._the_clock.now()
         user = req.context['user']
 
+        try:
+            menu_section_creation_request_raw = req.stream.read().decode('utf-8')
+            menu_section_creation_request = \
+                self._menu_section_creation_request_validator.validaate(
+                    menu_section_creation_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid menu section creation data',
+                description='Invalid data "{}"'.format(menu_section_creation_request_raw)) from e
+
+        with self._sql_engine.begin() as conn:
+            org_row = OrgResource.fetch_org_for_user(conn, user['id'])
+            
+            create_menu_section = _menu_section \
+                .insert() \
+                .values(
+                    org_id=org_row['id'],
+                    time_created=right_now,
+                    name=menu_section_creation_request['name'],
+                    description=menu_section_creation_request['description'])
+
+            result = conn.execute(create_menu_section)
+            menu_section_id = result.inserted_primary_key[0]
+            result.close()
+
+        response = {
+            'menuSections': [{
+                'id': menu_section_id,
+                'timeCreated': int(right_now.timestamp()),
+                'name': menu_section_creation_request['name'],
+                'descripton': menu_section_creation_request['description']
+            }]
+        }
+
+        jsonschema.validate(response, schemas.MENU_SECTIONS_RESPONSE)
+
         resp.status = falcon.HTTP_201
-        resp.body = 'Hello MenuSectionsResource'
+        resp.body = json.dumps(response)
 
     def on_get(self, req, resp):
         """Get a particular menu section."""
 
         self._cors_response(resp)
+
         user = req.context['user']
 
+        with self._sql_engine.begin() as conn:
+            fetch_menu_sections = sql.sql \
+                .select([
+                    _menu_section.c.id,
+                    _menu_section.c.org_id,
+                    _menu_section.c.time_created,
+                    _menu_section.c.name,
+                    _menu_section.c.description
+                ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
+                .where(sql.and_(
+                    _org_user.c.user_id == user_id,
+                    _menu_section.c.time_archived != None))
+
+            result = conn.execute(fetch_menu_sections)
+            menu_sections_row = result.fetchall()
+            result.close()
+
+        response = {
+            'menuSections': [{
+                'id': r['id'],
+                'timeCreated': int(r['time_created'].timestamp()),
+                'name': r['name'],
+                'description': r['description']
+            } for r in menu_sections_row]
+        }
+
+        jsonschema.validate(response, schemas.MENU_SECTIONS_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuSectionsResource'
+        resp.body = json.dumps(response)
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
