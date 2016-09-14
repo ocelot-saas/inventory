@@ -172,18 +172,7 @@ class Model(object):
 
     def get_org(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_org = sql.sql \
-                .select([
-                    _org.c.id,
-                    _org.c.time_created
-                ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)) \
-                .where(_org_user.c.user_id == user_id)
-
-            result = conn.execute(fetch_org)
-            org_row = result.fetchone()
-            result.close()
+            org_row = self._fetch_org(conn, user_id)
 
         if org_row is None:
             raise OrgDoesNotExist()
@@ -220,10 +209,52 @@ class Model(object):
         return restaurant
 
     def create_menu_section(self, user_id, name, description):
-        pass
+        right_now = self._the_clock.now()
+        
+        with self._sql_engine.begin() as conn:
+            org_row = self._fetch_org(conn, user_id)
+            
+            create_menu_section = _menu_section \
+                .insert() \
+                .values(
+                    org_id=org_row['id'],
+                    time_created=right_now,
+                    name=name,
+                    description=description)
+
+            result = conn.execute(create_menu_section)
+            menu_section_id = result.inserted_primary_key[0]
+            result.close()
+
+        return {
+            'id': menu_section_id,
+            'timeCreatedTs': int(right_now.timestamp()),
+            'name': name,
+            'description': description
+        }
 
     def get_all_menu_sections(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_menu_sections = sql.sql \
+                .select([
+                    _menu_section.c.id,
+                    _menu_section.c.org_id,
+                    _menu_section.c.time_created,
+                    _menu_section.c.name,
+                    _menu_section.c.description
+                ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
+                .where(sql.and_(
+                    _org_user.c.user_id == user_id,
+                    _menu_section.c.time_archived == None))
+
+            result = conn.execute(fetch_menu_sections)
+            menu_sections_rows = result.fetchall()
+            result.close()
+
+        return [_i2e(s) for s in menu_sections_rows]
 
     def get_menu_section(self, user_id, section_id):
         pass
@@ -267,6 +298,23 @@ class Model(object):
 
     def update_platforms_emailcenter(self, user_id, **kwargs):
         pass
+
+    @staticmethod
+    def _fetch_org(conn, user_id):
+        fetch_org = sql.sql \
+            .select([
+                _org.c.id,
+                _org.c.time_created
+            ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_org)
+        org_row = result.fetchone()
+        result.close()
+
+        return org_row
 
     @staticmethod
     def _fetch_restaurant(conn, user_id):

@@ -253,10 +253,9 @@ class RestaurantResource(object):
 class MenuSectionsResource(object):
     """All the sections in the menu for an organization."""
 
-    def __init__(self, menu_sections_creation_request_validator, the_clock, sql_engine):
+    def __init__(self, menu_sections_creation_request_validator, model):
         self._menu_sections_creation_request_validator = menu_sections_creation_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         
@@ -284,29 +283,16 @@ class MenuSectionsResource(object):
                 title='Invalid menu section creation data',
                 description='Invalid data "{}"'.format(menu_sections_creation_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            org_row = OrgResource.fetch_org_for_user(conn, user['id'])
-            
-            create_menu_section = _menu_section \
-                .insert() \
-                .values(
-                    org_id=org_row['id'],
-                    time_created=right_now,
-                    name=menu_sections_creation_request['name'],
-                    description=menu_sections_creation_request['description'])
+        try:
+            menu_section = self._model.create_menu_section(
+                user['id'], menu_sections_creation_request['name'],
+                menu_sections_creation_request['description'])
+        except menu.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
 
-            result = conn.execute(create_menu_section)
-            menu_section_id = result.inserted_primary_key[0]
-            result.close()
-
-        response = {
-            'menuSections': [{
-                'id': menu_section_id,
-                'timeCreatedTs': int(right_now.timestamp()),
-                'name': menu_sections_creation_request['name'],
-                'description': menu_sections_creation_request['description']
-            }]
-        }
+        response = {'menuSections': [menu_section]}
 
         jsonschema.validate(response, schemas.MENU_SECTIONS_RESPONSE)
 
@@ -320,34 +306,14 @@ class MenuSectionsResource(object):
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            fetch_menu_sections = sql.sql \
-                .select([
-                    _menu_section.c.id,
-                    _menu_section.c.org_id,
-                    _menu_section.c.time_created,
-                    _menu_section.c.name,
-                    _menu_section.c.description
-                ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
-                .where(sql.and_(
-                    _org_user.c.user_id == user['id'],
-                    _menu_section.c.time_archived == None))
+        try:
+            menu_sections = self._model.get_all_menu_sections(user['id'])
+        except menu.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
 
-            result = conn.execute(fetch_menu_sections)
-            menu_sections_rows = result.fetchall()
-            result.close()
-
-        response = {
-            'menuSections': [{
-                'id': r['id'],
-                'timeCreatedTs': int(r['time_created'].timestamp()),
-                'name': r['name'],
-                'description': r['description']
-            } for r in menu_sections_rows]
-        }
+        response = {'menuSections': menu_sections}
 
         jsonschema.validate(response, schemas.MENU_SECTIONS_RESPONSE)
 
