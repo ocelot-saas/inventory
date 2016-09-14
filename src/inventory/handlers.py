@@ -4,14 +4,14 @@ import json
 import hashlib
 
 import falcon
+import jsonschema
 import slugify
+import sqlalchemy as sql
+import sqlalchemy.dialects.postgresql as postgresql
 
 import inventory.config as config
 import inventory.validation as validation
 import inventory.schemas as schemas
-import sqlalchemy as sql
-import sqlalchemy.dialects.postgresql as postgresql
-import jsonschema
 
 
 _metadata = sql.MetaData(schema='inventory')
@@ -114,10 +114,9 @@ _PLATFORMS_EMAILCENTER_E2I_FIELD_NAMES = {
 class OrgResource(object):
     """The collection of organizations."""
 
-    def __init__(self, org_creation_request_validator, the_clock, sql_engine):
+    def __init__(self, org_creation_request_validator, model):
         self._org_creation_request_validator = org_creation_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
 
@@ -132,7 +131,6 @@ class OrgResource(object):
         
         self._cors_response(resp)
 
-        right_now = self._the_clock.now()
         user = req.context['user']
 
         try:
@@ -144,76 +142,17 @@ class OrgResource(object):
                 title='Invalid org creation data',
                 description='Invalid data "{}"'.format(org_creation_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            try:
-                create_org = _org \
-                    .insert() \
-                    .values(time_created=right_now)
+        try:
+            org = self._model.create_org(
+                user['id'], org_creation_request['name'], org_creation_request['description'],
+                org_creation_request['keywords'], org_creation_request['address'],
+                org_creation_request['openingHours'], org_creation_request['imageSet'])
+        except model.OrgAlreadyExistsError as e:
+            raise falcon.HTTPConflict(
+                title='Org already exists',
+                description='Org already exists') from e
 
-                result = conn.execute(create_org)
-                org_id = result.inserted_primary_key[0]
-                result.close()
-
-                create_org_user = _org_user \
-                    .insert() \
-                    .values(org_id=org_id, user_id=user['id'], time_created=right_now)
-
-                result = conn.execute(create_org_user)
-                result.close()
-
-                create_restaurant = _restaurant \
-                    .insert() \
-                    .values(
-                        org_id=org_id,
-                        time_created=right_now,
-                        name=org_creation_request['name'],
-                        description=org_creation_request['description'],
-                        keywords=org_creation_request['keywords'],
-                        address=org_creation_request['address'],
-                        opening_hours=org_creation_request['openingHours'],
-                        image_set=org_creation_request['imageSet'])
-
-                conn.execute(create_restaurant).close()
-
-                # Create basic plaforms with basic info
-
-                create_platforms_website = _platforms_website \
-                    .insert() \
-                    .values(
-                        org_id=org_id,
-                        time_created=right_now,
-                        subdomain=slugify.slugify(org_creation_request['name']))
-
-                conn.execute(create_platforms_website).close()
-
-                create_platforms_callcenter = _platforms_callcenter \
-                    .insert() \
-                    .values(
-                        org_id=org_id,
-                        time_created=right_now,
-                        phone_number='')
-
-                conn.execute(create_platforms_callcenter).close()
-
-                create_platforms_emailcenter = _platforms_emailcenter \
-                    .insert() \
-                    .values(
-                        org_id=org_id,
-                        time_created=right_now,
-                        email_name='contact')
-
-                conn.execute(create_platforms_emailcenter).close()
-            except sql.exc.IntegrityError as e:
-                raise falcon.HTTPConflict(
-                    title='Org already exists',
-                    description='Org already exists') from e
-
-        response = {
-            'org': {
-                'id': org_id,
-                'timeCreatedTs': int(right_now.timestamp())
-            }
-        }
+        response = {'org': org}
 
         jsonschema.validate(response, schemas.ORG_RESPONSE)
 
@@ -227,42 +166,19 @@ class OrgResource(object):
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            org_row = self.fetch_org_for_user(conn, user['id'])
+        org = self._model.get_org(user['id'])
 
-            if org_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Org does not exist',
-                    description='Org does not exist')
+        if org is None:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
 
-        response = {
-            'org': {
-                'id': org_row['id'],
-                'timeCreatedTs': int(org_row['time_created'].timestamp())
-            }
-        }
+        response = {'org': org}
 
         jsonschema.validate(response, schemas.ORG_RESPONSE)
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
-
-    @staticmethod
-    def fetch_org_for_user(conn, user_id):
-        fetch_org = sql.sql \
-            .select([
-                _org.c.id,
-                _org.c.time_created
-            ]) \
-            .select_from(_org_user
-                         .join(_org, _org.c.id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_org)
-        org_row = result.fetchone()
-        result.close()
-
-        return org_row
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)

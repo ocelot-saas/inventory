@@ -26,7 +26,7 @@ CREATE TABLE inventory.menu_item (
     section_id INTEGER NOT NULL,
     org_id INTEGER NOT NULL,
     time_created TIMESTAMP NOT NULL,
-    time_archived TIMESTAMP,,
+    time_archived TIMESTAMP,
     name TEXT NOT NULL,
     description TEXT NOT NULL,
     keywords TEXT[] NOT NULL,

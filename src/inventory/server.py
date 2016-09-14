@@ -8,6 +8,7 @@ import clock
 import identity.client as identity
 import inventory.config as config
 import inventory.handlers as inventory
+import inventory.model as model
 import inventory.validation as validation
 import sqlalchemy
 
@@ -46,11 +47,11 @@ platforms_emailcenter_update_request_validator = \
     validation.PlatformsEmailcenterUpdateRequestValidator()
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
+model = model.Model(the_clock, sql_engine)
 
 org_resource = inventory.OrgResource(
     org_creation_request_validator=org_creation_request_validator,
-    the_clock=the_clock,
-    sql_engine=sql_engine)
+    model=model)
 
 restaurant_resource = inventory.RestaurantResource(
     restaurant_update_request_validator=restaurant_update_request_validator,
