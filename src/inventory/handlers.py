@@ -287,7 +287,7 @@ class MenuSectionsResource(object):
             menu_section = self._model.create_menu_section(
                 user['id'], menu_sections_creation_request['name'],
                 menu_sections_creation_request['description'])
-        except menu.OrgDoesNotExist as e:
+        except model.OrgDoesNotExist as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -308,7 +308,7 @@ class MenuSectionsResource(object):
 
         try:
             menu_sections = self._model.get_all_menu_sections(user['id'])
-        except menu.OrgDoesNotExist as e:
+        except model.OrgDoesNotExist as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -329,9 +329,8 @@ class MenuSectionsResource(object):
 class MenuSectionResource(object):
     """A section in the menu for an organization."""
 
-    def __init__(self, the_clock, sql_engine):
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+    def __init__(self, model):
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         
@@ -349,40 +348,18 @@ class MenuSectionResource(object):
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            fetch_menu_section = sql.sql \
-                .select([
-                    _menu_section.c.id,
-                    _menu_section.c.org_id,
-                    _menu_section.c.time_created,
-                    _menu_section.c.name,
-                    _menu_section.c.description
-                ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
-                .where(sql.and_(
-                    _org_user.c.user_id == user['id'],
-                    _menu_section.c.id == section_id,
-                    _menu_section.c.time_archived == None))
+        try:
+            menu_section = self._model.get_menu_section(user['id'], section_id)
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
+        except model.SectionDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Section does not exist',
+                description='Section does not exist')
 
-            result = conn.execute(fetch_menu_section)
-            menu_section_row = result.fetchone()
-            result.close()
-
-            if menu_section_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Menu section does not exist',
-                    description='Menu section does not exist')
-
-        response = {
-            'menuSection': {
-                'id': menu_section_row['id'],
-                'timeCreatedTs': int(menu_section_row['time_created'].timestamp()),
-                'name': menu_section_row['name'],
-                'description': menu_section_row['description']
-            }
-        }
+        response = {'menuSection': menuSection}
 
         jsonschema.validate(response, schemas.MENU_SECTION_RESPONSE)
 
@@ -394,7 +371,7 @@ class MenuSectionResource(object):
 
         self._cors_response(resp)
         
-        section_id = self._validate_section_id(section_id)        
+        section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200

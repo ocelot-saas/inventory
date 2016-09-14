@@ -62,8 +62,7 @@ menu_sections_resource = inventory.MenuSectionsResource(
     model=model)
 
 menu_section_resource = inventory.MenuSectionResource(
-    the_clock=the_clock,
-    sql_engine=sql_engine)
+    model=model)
 
 menu_items_resource = inventory.MenuItemsResource(
     the_clock=the_clock,

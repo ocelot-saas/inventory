@@ -93,6 +93,9 @@ class OrgAlreadyExistsError(Error):
 class OrgDoesNotExist(Error):
     pass
 
+class SectionDoesNotExist(Error):
+    pass
+
 
 class Model(object):
     def __init__(self, the_clock, sql_engine):
@@ -257,7 +260,31 @@ class Model(object):
         return [_i2e(s) for s in menu_sections_rows]
 
     def get_menu_section(self, user_id, section_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_menu_section = sql.sql \
+                .select([
+                    _menu_section.c.id,
+                    _menu_section.c.org_id,
+                    _menu_section.c.time_created,
+                    _menu_section.c.name,
+                    _menu_section.c.description
+                ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
+                .where(sql.and_(
+                    _org_user.c.user_id == user['id'],
+                    _menu_section.c.id == section_id,
+                    _menu_section.c.time_archived == None))
+
+            result = conn.execute(fetch_menu_section)
+            menu_section_row = result.fetchone()
+            result.close()
+
+        if menu_section_row is None:
+            raise SectionDoesNotExist()
+
+        return _i2e(menu_section_row)
 
     def update_menu_section(self, user_id, section_id, **kwargs):
         pass
