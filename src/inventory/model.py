@@ -1,5 +1,8 @@
 """Model actions for the inventory service."""
 
+import datetime
+
+import inflection
 import slugify
 import sqlalchemy as sql
 import sqlalchemy.dialects.postgresql as postgresql
@@ -84,6 +87,10 @@ class Error(Exception):
 
 
 class OrgAlreadyExistsError(Error):
+    pass
+
+
+class OrgDoesNotExist(Error):
     pass
 
 
@@ -178,16 +185,39 @@ class Model(object):
             org_row = result.fetchone()
             result.close()
 
-        return {
-            'id': org_row['id'],
-            'timeCreatedTs': int(org_row['time_created'].timestamp())
-        }
+        if org_row is None:
+            raise OrgDoesNotExist()
+
+        return _i2e(org_row)
 
     def get_restaurant(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            restaurant_row = self._fetch_restaurant(conn, user_id)
+
+        if restaurant_row is None:
+            raise OrgDoesNotExist()
+
+        return _i2e(restaurant_row)
 
     def update_restaurant(self, user_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            restaurant_row = self._fetch_restaurant(conn, user_id)
+
+            if restaurant_row is None:
+                raise OrgDoesNotExist()
+
+            update_restaurant = _restaurant \
+                .update() \
+                .where(_restaurant.c.id == restaurant_row['id']) \
+                .values(**_e2i(kwargs))
+
+            result = conn.execute(update_restaurant)
+            result.close()
+
+        restaurant = _i2e(restaurant_row)
+        restaurant.update(kwargs)
+
+        return restaurant
 
     def create_menu_section(self, user_id, name, description):
         pass
@@ -237,3 +267,41 @@ class Model(object):
 
     def update_platforms_emailcenter(self, user_id, **kwargs):
         pass
+
+    @staticmethod
+    def _fetch_restaurant(conn, user_id):
+        fetch_restaurant = sql.sql \
+            .select([
+                _restaurant.c.id,
+                _restaurant.c.time_created,
+                _restaurant.c.name,
+                _restaurant.c.description,
+                _restaurant.c.keywords,
+                _restaurant.c.address,
+                _restaurant.c.opening_hours,
+                _restaurant.c.image_set,
+            ]) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+        result = conn.execute(fetch_restaurant)
+        restaurant_row = result.fetchone()
+        result.close()
+
+        return restaurant_row
+
+
+def _e2i(d):
+    return {inflection.underscore(k):v for k,v in d.items()}
+
+
+def _i2e(d):
+    o = {}
+    for k, v in d.items():
+        if isinstance(v, datetime.datetime):
+            o[inflection.camelize(k, False) + 'Ts'] = int(v.timestamp())
+        else:
+            o[inflection.camelize(k, False)] = v
+    return o

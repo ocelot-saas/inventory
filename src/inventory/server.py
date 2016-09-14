@@ -55,8 +55,7 @@ org_resource = inventory.OrgResource(
 
 restaurant_resource = inventory.RestaurantResource(
     restaurant_update_request_validator=restaurant_update_request_validator,
-    the_clock=the_clock,
-    sql_engine=sql_engine)
+    model=model)
 
 menu_sections_resource = inventory.MenuSectionsResource(
     menu_sections_creation_request_validator=menu_sections_creation_request_validator,

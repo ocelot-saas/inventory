@@ -10,6 +10,7 @@ import sqlalchemy as sql
 import sqlalchemy.dialects.postgresql as postgresql
 
 import inventory.config as config
+import inventory.model as model
 import inventory.validation as validation
 import inventory.schemas as schemas
 
@@ -87,15 +88,6 @@ _platforms_emailcenter = sql.Table(
     sql.Column('email_name', sql.Text()))
     
 
-_RESTAURANT_E2I_FIELD_NAMES = {
-    'name': 'name',
-    'description': 'description',
-    'keywords': 'keywords',
-    'address': 'address',
-    'openingHours': 'opening_hours',
-    'imageSet': 'image_set'
-}
-
 _PLATFORMS_WEBSITE_E2I_FIELD_NAMES = {
     'subdomain': 'subdomain'
 }
@@ -166,12 +158,12 @@ class OrgResource(object):
 
         user = req.context['user']
 
-        org = self._model.get_org(user['id'])
-
-        if org is None:
+        try:
+            org = self._model.get_org(user['id'])
+        except model.OrgDoesNotExist as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
-                description='Org does not exist')
+                description='Org does not exist') from e
 
         response = {'org': org}
 
@@ -189,10 +181,9 @@ class OrgResource(object):
 class RestaurantResource(object):
     """The restaurant for an organization."""
 
-    def __init__(self, restaurant_update_request_validator, the_clock, sql_engine):
+    def __init__(self, restaurant_update_request_validator, model):
         self._restaurant_update_request_validator = restaurant_update_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         
@@ -209,26 +200,14 @@ class RestaurantResource(object):
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            restaurant_row = self._fetch_restaurant(conn, user['id'])
+        try:
+            restaurant = self._model.get_restaurant(user['id'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Restaurant does not exist',
+                description='Restaurant does not exist')
 
-            if restaurant_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Restaurant does not exist',
-                    description='Restaurant does not exist')
-
-        response = {
-            'restaurant': {
-                'id': restaurant_row['id'],
-                'timeCreatedTs': int(restaurant_row['time_created'].timestamp()),
-                'name': restaurant_row['name'],
-                'description': restaurant_row['description'],
-                'keywords': [kw for kw in restaurant_row['keywords']],
-                'address': restaurant_row['address'],
-                'openingHours': restaurant_row['opening_hours'],
-                'imageSet': restaurant_row['image_set']
-            }
-        }
+        response = {'restaurant': restaurant}
 
         jsonschema.validate(response, schemas.RESTAURANT_RESPONSE)
 
@@ -251,39 +230,14 @@ class RestaurantResource(object):
                 title='Invalid restaurant update data',
                 description='Invalid data "{}"'.format(restaurant_update_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            restaurant_row = self._fetch_restaurant(conn, user['id'])
+        try:
+            restaurant = self._model.update_restaurant(user['id'], **restaurant_update_request)
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Restaurant does not exist',
+                description='Restaurant does not exist')
 
-            if restaurant_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Restaurant does not exist',
-                    description='Restaurant does not exist')
-
-            properties_to_update = dict(
-                (_RESTAURANT_E2I_FIELD_NAMES[k], v) for (k, v) in restaurant_update_request.items())
-
-            update_restaurant = _restaurant \
-                .update() \
-                .where(_restaurant.c.id == restaurant_row['id']) \
-                .values(**properties_to_update)
-
-            result = conn.execute(update_restaurant)
-            result.close()
-
-        response = {
-            'restaurant': {
-                'id': restaurant_row['id'],
-                'timeCreatedTs': int(restaurant_row['time_created'].timestamp()),
-                'name': restaurant_row['name'],
-                'description': restaurant_row['description'],
-                'keywords': [kw for kw in restaurant_row['keywords']],
-                'address': restaurant_row['address'],
-                'openingHours': restaurant_row['opening_hours'],
-                'imageSet': restaurant_row['image_set']
-            }
-        }
-        
-        response['restaurant'].update(restaurant_update_request)
+        response = {'restaurant': restaurant}
 
         jsonschema.validate(response, schemas.RESTAURANT_RESPONSE)
 
@@ -294,29 +248,6 @@ class RestaurantResource(object):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
         resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
-    def _fetch_restaurant(self, conn, user_id):
-        fetch_restaurant = sql.sql \
-            .select([
-                _restaurant.c.id,
-                _restaurant.c.time_created,
-                _restaurant.c.name,
-                _restaurant.c.description,
-                _restaurant.c.keywords,
-                _restaurant.c.address,
-                _restaurant.c.opening_hours,
-                _restaurant.c.image_set,
-                ]) \
-            .select_from(_org_user
-                         .join(_org, _org.c.id == _org_user.c.org_id)
-                         .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_restaurant)
-        restaurant_row = result.fetchone()
-        result.close()
-
-        return restaurant_row
 
 
 class MenuSectionsResource(object):

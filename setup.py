@@ -33,6 +33,7 @@ setup(
         'falcon>=1,<2',
         'gunicorn>=19,<20',
         'identity>=1,<2',
+        'inflection>=0,<1',
         'jsonschema>=2,<3',
         'phonenumbers>=7,<8',
         'psycopg2>=2,<3',
