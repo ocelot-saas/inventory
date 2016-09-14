@@ -380,6 +380,7 @@ MENU_SECTIONS_CREATION_REQUEST = {
     'additionalProperties': False
 }
 
+
 MENU_SECTIONS_RESPONSE = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Menu sections response',
@@ -393,6 +394,19 @@ MENU_SECTIONS_RESPONSE = {
         }
     },
     'required': ['menuSections'],
+    'additionalProperties': False
+}
+
+
+MENU_SECTION_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu section response',
+    'description': 'Common response for menu section',
+    'type': 'object',
+    'properties': {
+        'menuSection': MENU_SECTION
+    },
+    'required': ['menuSection'],
     'additionalProperties': False
 }
 

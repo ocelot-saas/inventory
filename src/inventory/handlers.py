@@ -532,15 +532,56 @@ class MenuSectionResource(object):
         """Get a particular menu section."""
 
         self._cors_response(resp)
+
+        section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
+        with self._sql_engine.begin() as conn:
+            fetch_menu_section = sql.sql \
+                .select([
+                    _menu_section.c.id,
+                    _menu_section.c.org_id,
+                    _menu_section.c.time_created,
+                    _menu_section.c.name,
+                    _menu_section.c.description
+                ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
+                .where(sql.and_(
+                    _org_user.c.user_id == user['id'],
+                    _menu_section.c.id == section_id,
+                    _menu_section.c.time_archived == None))
+
+            result = conn.execute(fetch_menu_section)
+            menu_section_row = result.fetchone()
+            result.close()
+
+            if menu_section_row is None:
+                raise falcon.HTTPNotFound(
+                    title='Menu section does not exist',
+                    description='Menu section does not exist')
+
+        response = {
+            'menuSection': {
+                'id': menu_section_row['id'],
+                'timeCreatedTs': int(menu_section_row['time_created'].timestamp()),
+                'name': menu_section_row['name'],
+                'description': menu_section_row['description']
+            }
+        }
+
+        jsonschema.validate(response, schemas.MENU_SECTION_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuSectionResource'
+        resp.body = json.dumps(response)
 
     def on_put(self, req, resp, section_id):
         """Update a particular menu section."""
 
         self._cors_response(resp)
+        
+        section_id = self._validate_section_id(section_id)        
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
@@ -550,10 +591,22 @@ class MenuSectionResource(object):
         """Remove a particular menu section."""
 
         self._cors_response(resp)
+
+        section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
         resp.body = 'Hello MenuSectionResource'
+
+
+    @staticmethod
+    def _validate_section_id(section_id):
+        try:
+            return int(section_id)
+        except ValueError as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid section id',
+                description='Invalid section id "{}"'.format(section_id)) from e
 
     def _cors_response(self, resp):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
