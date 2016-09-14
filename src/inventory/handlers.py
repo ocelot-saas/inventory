@@ -407,9 +407,8 @@ class MenuSectionResource(object):
 class MenuItemsResource(object):
     """All the items in the menu for an organization."""
 
-    def __init__(self, the_clock, sql_engine):
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+    def __init__(self, model):
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         
@@ -446,9 +445,8 @@ class MenuItemsResource(object):
 class MenuItemResource(object):
     """A item in the menu for an organization."""
 
-    def __init__(self, the_clock, sql_engine):
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+    def __init__(self, model):
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         

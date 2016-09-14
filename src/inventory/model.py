@@ -93,6 +93,7 @@ class OrgAlreadyExistsError(Error):
 class OrgDoesNotExist(Error):
     pass
 
+
 class SectionDoesNotExist(Error):
     pass
 
