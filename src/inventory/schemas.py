@@ -361,7 +361,7 @@ RESTAURANT_RESPONSE = {
 }
 
 
-MENU_SECTION_CREATION_REQUEST = {
+MENU_SECTIONS_CREATION_REQUEST = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Menu section creation request',
     'description': 'Creation request for a menu section',

@@ -406,8 +406,8 @@ class RestaurantResource(object):
 class MenuSectionsResource(object):
     """All the sections in the menu for an organization."""
 
-    def __init__(self, menu_section_creation_request_validator, the_clock, sql_engine):
-        self._menu_section_creation_request_validator = menu_section_creation_request_validator
+    def __init__(self, menu_sections_creation_request_validator, the_clock, sql_engine):
+        self._menu_sections_creation_request_validator = menu_sections_creation_request_validator
         self._the_clock = the_clock
         self._sql_engine = sql_engine
 
@@ -428,14 +428,14 @@ class MenuSectionsResource(object):
         user = req.context['user']
 
         try:
-            menu_section_creation_request_raw = req.stream.read().decode('utf-8')
-            menu_section_creation_request = \
-                self._menu_section_creation_request_validator.validaate(
-                    menu_section_creation_request_raw)
+            menu_sections_creation_request_raw = req.stream.read().decode('utf-8')
+            menu_sections_creation_request = \
+                self._menu_sections_creation_request_validator.validate(
+                    menu_sections_creation_request_raw)
         except validation.Error as e:
             raise falcon.HTTPBadRequest(
                 title='Invalid menu section creation data',
-                description='Invalid data "{}"'.format(menu_section_creation_request_raw)) from e
+                description='Invalid data "{}"'.format(menu_sections_creation_request_raw)) from e
 
         with self._sql_engine.begin() as conn:
             org_row = OrgResource.fetch_org_for_user(conn, user['id'])
@@ -445,8 +445,8 @@ class MenuSectionsResource(object):
                 .values(
                     org_id=org_row['id'],
                     time_created=right_now,
-                    name=menu_section_creation_request['name'],
-                    description=menu_section_creation_request['description'])
+                    name=menu_sections_creation_request['name'],
+                    description=menu_sections_creation_request['description'])
 
             result = conn.execute(create_menu_section)
             menu_section_id = result.inserted_primary_key[0]
@@ -455,9 +455,9 @@ class MenuSectionsResource(object):
         response = {
             'menuSections': [{
                 'id': menu_section_id,
-                'timeCreated': int(right_now.timestamp()),
-                'name': menu_section_creation_request['name'],
-                'descripton': menu_section_creation_request['description']
+                'timeCreatedTs': int(right_now.timestamp()),
+                'name': menu_sections_creation_request['name'],
+                'description': menu_sections_creation_request['description']
             }]
         }
 
@@ -486,20 +486,20 @@ class MenuSectionsResource(object):
                              .join(_org, _org.c.id == _org_user.c.org_id)
                              .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
                 .where(sql.and_(
-                    _org_user.c.user_id == user_id,
-                    _menu_section.c.time_archived != None))
+                    _org_user.c.user_id == user['id'],
+                    _menu_section.c.time_archived == None))
 
             result = conn.execute(fetch_menu_sections)
-            menu_sections_row = result.fetchall()
+            menu_sections_rows = result.fetchall()
             result.close()
 
         response = {
             'menuSections': [{
                 'id': r['id'],
-                'timeCreated': int(r['time_created'].timestamp()),
+                'timeCreatedTs': int(r['time_created'].timestamp()),
                 'name': r['name'],
                 'description': r['description']
-            } for r in menu_sections_row]
+            } for r in menu_sections_rows]
         }
 
         jsonschema.validate(response, schemas.MENU_SECTIONS_RESPONSE)

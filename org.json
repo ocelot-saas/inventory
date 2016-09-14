@@ -1,38 +1,4 @@
 {
-	"name": "A",
-	"description": "B",
-	"keywords": ["a", "b"],
-	"address": "C",
-	"openingHours": {
-	   "weekday": {
-	      "start": {
-	         "hour": 8,
-	         "minute": 0
-	      },
-	      "end": {
-	         "hour": 20,
-	         "minute": 0
-	      }
-	   },
-	   "saturday": {
-	      "start": {
-	         "hour": 8,
-	         "minute": 0
-	      },
-	      "end": {
-	         "hour": 20,
-	         "minute": 0
-	      }
-	   },
-	   "sunday": {
-	      "start": {
-	         "hour": 8,
-	         "minute": 0
-	      },
-	      "end": {
-	         "hour": 20,
-	         "minute": 0
-	      }
-	   }
-	}
+    "name": "AAA",
+    "description": "BBB"
 }
