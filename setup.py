@@ -31,6 +31,7 @@ setup(
         # Duplicated from requirements.txt.
         'clock==0.0.5',
         'falcon>=1,<2',
+        'falcon-cors>=1,<2',
         'gunicorn>=19,<20',
         'identity>=1,<2',
         'inflection>=0,<1',

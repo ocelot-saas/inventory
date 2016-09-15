@@ -9,7 +9,6 @@ import slugify
 import sqlalchemy as sql
 import sqlalchemy.dialects.postgresql as postgresql
 
-import inventory.config as config
 import inventory.model as model
 import inventory.validation as validation
 import inventory.schemas as schemas
@@ -110,19 +109,9 @@ class OrgResource(object):
         self._org_creation_request_validator = org_creation_request_validator
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_post(self, req, resp):
         """Create the organization and restaurant for a user."""
         
-        self._cors_response(resp)
-
         user = req.context['user']
 
         try:
@@ -154,8 +143,6 @@ class OrgResource(object):
     def on_get(self, req, resp):
         """Retrieve a particular organization, with info for the restaurant as well."""
 
-        self._cors_response(resp)
-
         user = req.context['user']
 
         try:
@@ -172,11 +159,6 @@ class OrgResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET, PUT')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
 
 class RestaurantResource(object):
     """The restaurant for an organization."""
@@ -185,18 +167,8 @@ class RestaurantResource(object):
         self._restaurant_update_request_validator = restaurant_update_request_validator
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp):
         """Get the restaurant for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -216,8 +188,6 @@ class RestaurantResource(object):
 
     def on_put(self, req, resp):
         """Update the restaurant for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -244,11 +214,6 @@ class RestaurantResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
 
 class MenuSectionsResource(object):
     """All the sections in the menu for an organization."""
@@ -257,18 +222,8 @@ class MenuSectionsResource(object):
         self._menu_sections_creation_request_validator = menu_sections_creation_request_validator
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_post(self, req, resp):
         """Create a menu section."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -301,8 +256,6 @@ class MenuSectionsResource(object):
     def on_get(self, req, resp):
         """Get a particular menu section."""
 
-        self._cors_response(resp)
-
         user = req.context['user']
 
         try:
@@ -319,11 +272,6 @@ class MenuSectionsResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
 
 class MenuSectionResource(object):
     """A section in the menu for an organization."""
@@ -331,18 +279,8 @@ class MenuSectionResource(object):
     def __init__(self, model):
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp, section_id):
         """Get a particular menu section."""
-
-        self._cors_response(resp)
 
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
@@ -368,8 +306,6 @@ class MenuSectionResource(object):
     def on_put(self, req, resp, section_id):
         """Update a particular menu section."""
 
-        self._cors_response(resp)
-        
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
@@ -378,8 +314,6 @@ class MenuSectionResource(object):
 
     def on_delete(self, req, resp, section_id):
         """Remove a particular menu section."""
-
-        self._cors_response(resp)
 
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
@@ -397,11 +331,6 @@ class MenuSectionResource(object):
                 title='Invalid section id',
                 description='Invalid section id "{}"'.format(section_id)) from e
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT, DELETE')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
 
 class MenuItemsResource(object):
     """All the items in the menu for an organization."""
@@ -409,18 +338,9 @@ class MenuItemsResource(object):
     def __init__(self, model):
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_post(self, req, resp):
         """Create a menu item."""
 
-        self._cors_response(resp)
         user = req.context['user']
 
         resp.status = falcon.HTTP_201
@@ -429,16 +349,10 @@ class MenuItemsResource(object):
     def on_get(self, req, resp):
         """Get a particular menu item."""
 
-        self._cors_response(resp)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
         resp.body = 'Hello MenuItemsResource'
-
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
 
 class MenuItemResource(object):
@@ -447,18 +361,9 @@ class MenuItemResource(object):
     def __init__(self, model):
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp, item_id):
         """Get a particular menu item."""
 
-        self._cors_response(resp)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
@@ -467,7 +372,6 @@ class MenuItemResource(object):
     def on_put(self, req, resp, item_id):
         """Update a particular menu item."""
 
-        self._cors_response(resp)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
@@ -476,16 +380,10 @@ class MenuItemResource(object):
     def on_delete(self, req, resp, item_id):
         """Remove a particular menu item."""
 
-        self._cors_response(resp)
         user = req.context['user']
 
         resp.status = falcon.HTTP_200
         resp.body = 'Hello MenuItemResource'
-
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT, DELETE')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
 
 class PlatformsWebsiteResource(object):
@@ -496,18 +394,8 @@ class PlatformsWebsiteResource(object):
             platforms_website_update_request_validator
         self._model = model
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp):
         """Get the website platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -527,8 +415,6 @@ class PlatformsWebsiteResource(object):
 
     def on_put(self, req, resp):
         """Update the website platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -558,11 +444,6 @@ class PlatformsWebsiteResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
 
 class PlatformsCallcenterResource(object):
     """The callcenter platform for an organization."""
@@ -573,18 +454,8 @@ class PlatformsCallcenterResource(object):
         self._the_clock = the_clock
         self._sql_engine = sql_engine
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp):
         """Get the callcenter platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -611,8 +482,6 @@ class PlatformsCallcenterResource(object):
 
     def on_put(self, req, resp):
         """Update the callcenter platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -661,11 +530,6 @@ class PlatformsCallcenterResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
     def _fetch_platforms_callcenter(self, conn, user_id):
         fetch_platforms_callcenter = sql.sql \
             .select([
@@ -695,18 +559,8 @@ class PlatformsEmailcenterResource(object):
         self._the_clock = the_clock
         self._sql_engine = sql_engine
 
-        self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
-        
-    def on_options(self, req, resp):
-        """Check CORS is OK."""
-
-        resp.status = falcon.HTTP_204
-        self._cors_response(resp)
-
     def on_get(self, req, resp):
         """Get the emailcenter platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -733,8 +587,6 @@ class PlatformsEmailcenterResource(object):
 
     def on_put(self, req, resp):
         """Update the emailcenter platform for an organization."""
-
-        self._cors_response(resp)
 
         user = req.context['user']
 
@@ -782,11 +634,6 @@ class PlatformsEmailcenterResource(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
-
-    def _cors_response(self, resp):
-        resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
-        resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
-        resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
 
     def _fetch_platforms_emailcenter(self, conn, user_id):
         fetch_platforms_emailcenter = sql.sql \

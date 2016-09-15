@@ -9,7 +9,7 @@ PORT = os.getenv('PORT')
 IDENTITY_SERVICE_DOMAIN = os.getenv('IDENTITY_SERVICE_DOMAIN')
 MIGRATIONS_PATH = os.getenv('MIGRATIONS_PATH')
 DATABASE_URL = os.getenv('DATABASE_URL')
-CLIENTS = os.getenv('CLIENTS').split(',')
+CLIENTS = ['http://{}'.format(c) for c in os.getenv('CLIENTS').split(',')]
 
 # WSGI config. Not exported, technically.
 bind = '{}:{}'.format(ADDRESS, PORT)

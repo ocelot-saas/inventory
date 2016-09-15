@@ -3,6 +3,7 @@
 from wsgiref import simple_server
 
 import falcon
+import falcon_cors
 
 import clock
 import identity.client as identity
@@ -14,8 +15,12 @@ import sqlalchemy
 
 
 auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
+cors_middleware = falcon_cors.CORS(
+    allow_origins_list=config.CLIENTS,
+    allow_headers_list=['Authorization', 'Content-Type'],
+    allow_all_methods=True).middleware
 
-app = falcon.API(middleware=[auth_middleware])
+app = falcon.API(middleware=[auth_middleware, cors_middleware])
 
 restaurant_name_validator = validation.RestaurantNameValidator()
 restaurant_description_validator = validation.RestaurantDescriptionValidator()
