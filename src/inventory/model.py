@@ -15,6 +15,11 @@ _org = sql.Table(
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('time_created', sql.DateTime(timezone=True)))
 
+_org_columns = [
+    _org.c.id,
+    _org.c.time_created
+]
+
 _org_user = sql.Table(
     'org_user', _metadata,
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
@@ -34,6 +39,17 @@ _restaurant = sql.Table(
     sql.Column('opening_hours', postgresql.JSON()),
     sql.Column('image_set', postgresql.JSON()))
 
+_restaurant_columns = [
+    _restaurant.c.id,
+    _restaurant.c.time_created,
+    _restaurant.c.name,
+    _restaurant.c.description,
+    _restaurant.c.keywords,
+    _restaurant.c.address,
+    _restaurant.c.opening_hours,
+    _restaurant.c.image_set,
+]
+
 _menu_section = sql.Table(
     'menu_section', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
@@ -43,6 +59,13 @@ _menu_section = sql.Table(
     sql.Column('name', sql.Text()),
     sql.Column('description', sql.Text()),
     sql.UniqueConstraint('id', 'org_id', name='menu_section_uk_id_org_id'))
+
+_menu_section_columns = [
+    _menu_section.c.id,
+    _menu_section.c.time_created,
+    _menu_section.c.name,
+    _menu_section.c.description
+]
 
 _menu_item = sql.Table(
     'menu_item', _metadata,
@@ -60,12 +83,28 @@ _menu_item = sql.Table(
         ['section_id', 'org_id'], [_menu_section.c.id, _menu_section.c.org_id]),
     sql.UniqueConstraint('id', 'section_id', 'org_id'))
 
+_menu_item_columns = [
+    _menu_item.c.id,
+    _menu_item.c.time_created,
+    _menu_item.c.name,
+    _menu_item.c.description,
+    _menu_item.c.keywords,
+    _menu_item.c.ingredients,
+    _menu_item.c.image_set
+]
+
 _platforms_website = sql.Table(
     'platforms_website', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
     sql.Column('subdomain', sql.Text()))
+
+_platforms_website_columns = [
+    _platforms_website.c.id,
+    _platforms_website.c.time_created,
+    _platforms_website.c.subdomain
+]
 
 _platforms_callcenter = sql.Table(
     'platforms_callcenter', _metadata,
@@ -74,12 +113,24 @@ _platforms_callcenter = sql.Table(
     sql.Column('time_created', sql.DateTime(timezone=True)),
     sql.Column('phone_number', sql.Text()))
 
+_platforms_callcenter_columns = [
+    _platforms_callcenter.c.id,
+    _platforms_callcenter.c.time_created,
+    _platforms_callcenter.c.phone_number
+]
+
 _platforms_emailcenter = sql.Table(
     'platforms_emailcenter', _metadata,
     sql.Column('id', sql.Integer, primary_key=True),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
     sql.Column('time_created', sql.DateTime(timezone=True)),
     sql.Column('email_name', sql.Text()))
+
+_platforms_emailcenter_columns = [
+    _platforms_emailcenter.c.id,
+    _platforms_emailcenter.c.time_created,
+    _platforms_emailcenter.c.email_name
+]
 
 
 class Error(Exception):
@@ -111,15 +162,16 @@ class Model(object):
             try:
                 create_org = _org \
                     .insert() \
+                    .returning(*_org_columns) \
                     .values(time_created=right_now)
 
                 result = conn.execute(create_org)
-                org_id = result.inserted_primary_key[0]
+                org_row = result.fetchone()
                 result.close()
 
                 create_org_user = _org_user \
                     .insert() \
-                    .values(org_id=org_id, user_id=user_id, time_created=right_now)
+                    .values(org_id=org_row['id'], user_id=user_id, time_created=right_now)
 
                 result = conn.execute(create_org_user)
                 result.close()
@@ -127,7 +179,7 @@ class Model(object):
                 create_restaurant = _restaurant \
                     .insert() \
                     .values(
-                        org_id=org_id,
+                        org_id=org_row['id'],
                         time_created=right_now,
                         name=restaurant_name,
                         description=restaurant_description,
@@ -143,7 +195,7 @@ class Model(object):
                 create_platforms_website = _platforms_website \
                     .insert() \
                     .values(
-                        org_id=org_id,
+                        org_id=org_row['id'],
                         time_created=right_now,
                         subdomain=slugify.slugify(restaurant_name))
 
@@ -152,7 +204,7 @@ class Model(object):
                 create_platforms_callcenter = _platforms_callcenter \
                     .insert() \
                     .values(
-                        org_id=org_id,
+                        org_id=org_row['id'],
                         time_created=right_now,
                         phone_number='')
 
@@ -161,7 +213,7 @@ class Model(object):
                 create_platforms_emailcenter = _platforms_emailcenter \
                     .insert() \
                     .values(
-                        org_id=org_id,
+                        org_id=org_row['id'],
                         time_created=right_now,
                         email_name='contact')
 
@@ -169,10 +221,7 @@ class Model(object):
             except sql.exc.IntegrityError as e:
                 raise OrgAlreadyExistsError() from e
 
-        return {
-            'id': org_id,
-            'timeCreatedTs': int(right_now.timestamp())
-        }
+        return _i2e(org_row)
 
     def get_org(self, user_id):
         with self._sql_engine.begin() as conn:
@@ -206,16 +255,7 @@ class Model(object):
 
             update_restaurant = _restaurant \
                 .update() \
-                .returning(
-                    _restaurant.c.id,
-                    _restaurant.c.time_created,
-                    _restaurant.c.name,
-                    _restaurant.c.description,
-                    _restaurant.c.keywords,
-                    _restaurant.c.address,
-                    _restaurant.c.opening_hours,
-                    _restaurant.c.image_set
-                ) \
+                .returning(*_restaurant_columns) \
                 .where(_restaurant.c.id == fetch_restaurant.as_scalar()) \
                 .values(**_e2i(kwargs))
 
@@ -390,10 +430,7 @@ class Model(object):
     @staticmethod
     def _fetch_org(conn, user_id, just_id=False):
         return sql \
-            .select([_org.c.id] if just_id else [
-                _org.c.id,
-                _org.c.time_created
-            ]) \
+            .select([_org.c.id] if just_id else _org_columns) \
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
@@ -401,16 +438,7 @@ class Model(object):
     @staticmethod
     def _fetch_restaurant(conn, user_id, just_id=False):
         return sql \
-            .select([_restaurant.c.id] if just_id else [
-                _restaurant.c.id,
-                _restaurant.c.time_created,
-                _restaurant.c.name,
-                _restaurant.c.description,
-                _restaurant.c.keywords,
-                _restaurant.c.address,
-                _restaurant.c.opening_hours,
-                _restaurant.c.image_set,
-            ]) \
+            .select([_restaurant.c.id] if just_id else _restaurant_columns) \
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
