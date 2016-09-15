@@ -2,16 +2,16 @@
 
 from wsgiref import simple_server
 
+import clock
 import falcon
 import falcon_cors
+import sqlalchemy
 
-import clock
 import identity.client as identity
 import inventory.config as config
 import inventory.handlers as inventory
 import inventory.model as model
 import inventory.validation as validation
-import sqlalchemy
 
 
 auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)

@@ -12,13 +12,8 @@ _metadata = sql.MetaData(schema='inventory')
 
 _org = sql.Table(
     'org', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)))
-
-_org_columns = [
-    _org.c.id,
-    _org.c.time_created
-]
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}))
 
 _org_user = sql.Table(
     'org_user', _metadata,
@@ -29,108 +24,76 @@ _org_user = sql.Table(
 
 _restaurant = sql.Table(
     'restaurant', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
-    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
-    sql.Column('address', sql.Text()),
-    sql.Column('opening_hours', postgresql.JSON()),
-    sql.Column('image_set', postgresql.JSON()))
-
-_restaurant_columns = [
-    _restaurant.c.id,
-    _restaurant.c.time_created,
-    _restaurant.c.name,
-    _restaurant.c.description,
-    _restaurant.c.keywords,
-    _restaurant.c.address,
-    _restaurant.c.opening_hours,
-    _restaurant.c.image_set,
-]
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
+    sql.Column('name', sql.Text(), info={'export': True}),
+    sql.Column('description', sql.Text(), info={'export': True}),
+    sql.Column('keywords', postgresql.ARRAY(sql.Text), info={'export': True}),
+    sql.Column('address', sql.Text(), info={'export': True}),
+    sql.Column('opening_hours', postgresql.JSON(), info={'export': True}),
+    sql.Column('image_set', postgresql.JSON(), info={'export': True}))
 
 _menu_section = sql.Table(
     'menu_section', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id)),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
     sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
+    sql.Column('name', sql.Text(), info={'export': True}),
+    sql.Column('description', sql.Text(), info={'export': True}),
     sql.UniqueConstraint('id', 'org_id', name='menu_section_uk_id_org_id'))
-
-_menu_section_columns = [
-    _menu_section.c.id,
-    _menu_section.c.time_created,
-    _menu_section.c.name,
-    _menu_section.c.description
-]
 
 _menu_item = sql.Table(
     'menu_item', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('section_id', sql.Integer),
     sql.Column('org_id', sql.Integer),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
     sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
-    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
-    sql.Column('ingredients', postgresql.JSON()),
-    sql.Column('image_set', postgresql.JSON()),
+    sql.Column('name', sql.Text(), info={'export': True}),
+    sql.Column('description', sql.Text(), info={'export': True}),
+    sql.Column('keywords', postgresql.ARRAY(sql.Text), info={'export': True}),
+    sql.Column('ingredients', postgresql.JSON(), info={'export': True}),
+    sql.Column('image_set', postgresql.JSON(), info={'export': True}),
     sql.ForeignKeyConstraint(
         ['section_id', 'org_id'], [_menu_section.c.id, _menu_section.c.org_id]),
     sql.UniqueConstraint('id', 'section_id', 'org_id'))
 
-_menu_item_columns = [
-    _menu_item.c.id,
-    _menu_item.c.time_created,
-    _menu_item.c.name,
-    _menu_item.c.description,
-    _menu_item.c.keywords,
-    _menu_item.c.ingredients,
-    _menu_item.c.image_set
-]
 
 _platforms_website = sql.Table(
     'platforms_website', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('subdomain', sql.Text()))
-
-_platforms_website_columns = [
-    _platforms_website.c.id,
-    _platforms_website.c.time_created,
-    _platforms_website.c.subdomain
-]
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
+    sql.Column('subdomain', sql.Text(), info={'export': True}))
 
 _platforms_callcenter = sql.Table(
     'platforms_callcenter', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('phone_number', sql.Text()))
-
-_platforms_callcenter_columns = [
-    _platforms_callcenter.c.id,
-    _platforms_callcenter.c.time_created,
-    _platforms_callcenter.c.phone_number
-]
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
+    sql.Column('phone_number', sql.Text(), info={'export': True}))
 
 _platforms_emailcenter = sql.Table(
     'platforms_emailcenter', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
+    sql.Column('id', sql.Integer, primary_key=True, info={'export': True}),
     sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('email_name', sql.Text()))
+    sql.Column('time_created', sql.DateTime(timezone=True), info={'export': True}),
+    sql.Column('email_name', sql.Text(), info={'export': True}))
 
-_platforms_emailcenter_columns = [
-    _platforms_emailcenter.c.id,
-    _platforms_emailcenter.c.time_created,
-    _platforms_emailcenter.c.email_name
-]
+
+def _ec(t):
+    return [c for c in t.c if 'export' in c.info and c.info['export']]
+
+
+_org_columns = _ec(_org)
+_restaurant_columns = _ec(_restaurant)
+_menu_section_columns = _ec(_menu_section)
+_menu_item_columns = _ec(_menu_item)
+_platforms_website_columns = _ec(_platforms_website)
+_platforms_callcenter_columns = _ec(_platforms_callcenter)
+_platforms_emailcenter_columns = _ec(_platforms_emailcenter)
 
 
 class Error(Exception):
@@ -443,6 +406,10 @@ class Model(object):
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
+
+
+def _ec(t):
+    return [c for c in t.c if 'export' in t.c.info and t.c.info['export']]
 
 
 def _e2i(d):
