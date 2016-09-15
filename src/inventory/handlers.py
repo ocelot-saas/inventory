@@ -492,11 +492,10 @@ class MenuItemResource(object):
 class PlatformsWebsiteResource(object):
     """The website platform for an organization."""
 
-    def __init__(self, platforms_website_update_request_validator, the_clock, sql_engine):
+    def __init__(self, platforms_website_update_request_validator, model):
         self._platforms_website_update_request_validator = \
             platforms_website_update_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
         self._cors_clients = ','.join('http://{}'.format(c) for c in config.CLIENTS)
         
@@ -513,21 +512,14 @@ class PlatformsWebsiteResource(object):
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            platforms_website_row = self._fetch_platforms_website(conn, user['id'])
+        try:
+            platforms_website = self._model.get_platforms_website(user['id'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Website does not exist',
+                description='Website does not exist') from e
 
-            if platforms_website_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Website does not exist',
-                    description='Website does not exist')
-
-        response = {
-            'platformsWebsite': {
-                'id': platforms_website_row['id'],
-                'timeCreatedTs': int(platforms_website_row['time_created'].timestamp()),
-                'subdomain': platforms_website_row['subdomain']
-            }
-        }
+        response = {'platformsWebsite': platforms_website}
 
         jsonschema.validate(response, schemas.PLATFORMS_WEBSITE_RESPONSE)
 
@@ -551,33 +543,14 @@ class PlatformsWebsiteResource(object):
                 title='Invalid website update data',
                 description='Invalid data "{}"'.format(platforms_website_update_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            platforms_website_row = self._fetch_platforms_website(conn, user['id'])
+        try:
+            platforms_website = self._model.update_platforms_website(user['id'], **platforms_website_update_request)
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Website does not exist',
+                description='Website does not exist')
 
-            if platforms_website_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Website does not exist',
-                    description='Website does not exist')
-
-            properties_to_update = dict(
-                (_PLATFORMS_WEBSITE_E2I_FIELD_NAMES[k], v) for (k, v)
-                in platforms_website_update_request.items())
-
-            update_platforms_website = _platforms_website \
-                .update() \
-                .where(_platforms_website.c.id == platforms_website_row['id']) \
-                .values(**properties_to_update)
-
-            result = conn.execute(update_platforms_website)
-            result.close()
-
-        response = {
-            'platformsWebsite': {
-                'id': platforms_website_row['id'],
-                'timeCreatedTs': int(platforms_website_row['time_created'].timestamp()),
-                'subdomain': platforms_website_row['subdomain']
-            }
-        }
+        response = {'platformsWebsite': platforms_website}
         
         response['platformsWebsite'].update(platforms_website_update_request)
 
@@ -590,25 +563,6 @@ class PlatformsWebsiteResource(object):
         resp.append_header('Access-Control-Allow-Origin', self._cors_clients)
         resp.append_header('Access-Control-Allow-Methods', 'OPTIONS, GET, PUT')
         resp.append_header('Access-Control-Allow-Headers', 'Authorization, Content-Type')
-
-    def _fetch_platforms_website(self, conn, user_id):
-        fetch_platforms_website = sql.sql \
-            .select([
-                _platforms_website.c.id,
-                _platforms_website.c.time_created,
-                _platforms_website.c.subdomain
-                ]) \
-            .select_from(_org_user
-                         .join(_org, _org.c.id == _org_user.c.org_id)
-                         .join(_platforms_website,
-                               _platforms_website.c.org_id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_platforms_website)
-        platforms_website_row = result.fetchone()
-        result.close()
-
-        return platforms_website_row
 
 
 class PlatformsCallcenterResource(object):

@@ -310,10 +310,56 @@ class Model(object):
         pass
 
     def get_platforms_website(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_platforms_website = sql.sql \
+                .select([
+                    _platforms_website.c.id,
+                    _platforms_website.c.time_created,
+                    _platforms_website.c.subdomain
+                ]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_platforms_website,
+                                   _platforms_website.c.org_id == _org_user.c.org_id)) \
+                .where(_org_user.c.user_id == user_id)
+
+            result = conn.execute(fetch_platforms_website)
+            platforms_website_row = result.fetchone()
+            result.close()
+
+        if platforms_website_row is None:
+            raise OrgDoesNotExist()
+
+        return _i2e(platforms_website_row)
 
     def update_platforms_website(self, user_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            find_platforms_website_id = sql \
+                .select([_platforms_website.c.id]) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_platforms_website,
+                                   _platforms_website.c.org_id == _org_user.c.org_id)) \
+                .where(_org_user.c.user_id == user_id) \
+                .as_scalar()
+            update_platforms_website = _platforms_website \
+                .update() \
+                .returning(
+                    _platforms_website.c.id,
+                    _platforms_website.c.time_created,
+                    _platforms_website.c.subdomain
+                ) \
+                .values(**_e2i(kwargs)) \
+                .where(_platforms_website.c.id == find_platforms_website_id)
+
+            result = conn.execute(update_platforms_website)
+            platforms_website_row = result.fetchone()
+            result.close()
+            
+        if platforms_website_row is None:
+            raise OrgDoesNotExist()
+
+        return _i2e(platforms_website_row)
 
     def get_platforms_callcenter(self, user_id):
         pass

@@ -72,8 +72,7 @@ menu_item_resource = inventory.MenuItemResource(
 
 platforms_website_resource = inventory.PlatformsWebsiteResource(
     platforms_website_update_request_validator=platforms_website_update_request_validator,
-    the_clock=the_clock,
-    sql_engine=sql_engine)
+    model=model)
 
 platforms_callcenter_resource = inventory.PlatformsCallcenterResource(
     platforms_callcenter_update_request_validator=platforms_callcenter_update_request_validator,
