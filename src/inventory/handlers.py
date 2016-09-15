@@ -448,32 +448,24 @@ class PlatformsWebsiteResource(object):
 class PlatformsCallcenterResource(object):
     """The callcenter platform for an organization."""
 
-    def __init__(self, platforms_callcenter_update_request_validator, the_clock, sql_engine):
+    def __init__(self, platforms_callcenter_update_request_validator, model):
         self._platforms_callcenter_update_request_validator = \
             platforms_callcenter_update_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
     def on_get(self, req, resp):
         """Get the callcenter platform for an organization."""
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            platforms_callcenter_row = self._fetch_platforms_callcenter(conn, user['id'])
+        try:
+            platforms_callcenter = self._model.get_platforms_callcenter(user['id'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Callcenter does not exist',
+                description='Callcenter does not exist') from e
 
-            if platforms_callcenter_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Callcenter does not exist',
-                    description='Callcenter does not exist')
-
-        response = {
-            'platformsCallcenter': {
-                'id': platforms_callcenter_row['id'],
-                'timeCreatedTs': int(platforms_callcenter_row['time_created'].timestamp()),
-                'phoneNumber': platforms_callcenter_row['phone_number']
-            }
-        }
+        response = {'platformsCallcenter': platforms_callcenter}
 
         jsonschema.validate(response, schemas.PLATFORMS_CALLCENTER_RESPONSE)
 
@@ -495,33 +487,14 @@ class PlatformsCallcenterResource(object):
                 title='Invalid callcenter update data',
                 description='Invalid data "{}"'.format(platforms_callcenter_update_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            platforms_callcenter_row = self._fetch_platforms_callcenter(conn, user['id'])
+        try:
+            platforms_callcenter = self._model.update_platforms_callcenter(user['id'], **platforms_callcenter_update_request)
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Callcenter does not exist',
+                description='Callcenter does not exist')
 
-            if platforms_callcenter_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Callcenter does not exist',
-                    description='Callcenter does not exist')
-
-            properties_to_update = dict(
-                (_PLATFORMS_CALLCENTER_E2I_FIELD_NAMES[k], v) for (k, v)
-                in platforms_callcenter_update_request.items())
-
-            update_platforms_callcenter = _platforms_callcenter \
-                .update() \
-                .where(_platforms_callcenter.c.id == platforms_callcenter_row['id']) \
-                .values(**properties_to_update)
-
-            result = conn.execute(update_platforms_callcenter)
-            result.close()
-
-        response = {
-            'platformsCallcenter': {
-                'id': platforms_callcenter_row['id'],
-                'timeCreatedTs': int(platforms_callcenter_row['time_created'].timestamp()),
-                'phoneNumber': platforms_callcenter_row['phone_number']
-            }
-        }
+        response = {'platformsCallcenter': platforms_callcenter}
         
         response['platformsCallcenter'].update(platforms_callcenter_update_request)
 
@@ -530,55 +503,28 @@ class PlatformsCallcenterResource(object):
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
 
-    def _fetch_platforms_callcenter(self, conn, user_id):
-        fetch_platforms_callcenter = sql.sql \
-            .select([
-                _platforms_callcenter.c.id,
-                _platforms_callcenter.c.time_created,
-                _platforms_callcenter.c.phone_number
-                ]) \
-            .select_from(_org_user
-                         .join(_org, _org.c.id == _org_user.c.org_id)
-                         .join(_platforms_callcenter,
-                               _platforms_callcenter.c.org_id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_platforms_callcenter)
-        platforms_callcenter_row = result.fetchone()
-        result.close()
-
-        return platforms_callcenter_row
-
 
 class PlatformsEmailcenterResource(object):
     """The emailcenter platform for an organization."""
 
-    def __init__(self, platforms_emailcenter_update_request_validator, the_clock, sql_engine):
+    def __init__(self, platforms_emailcenter_update_request_validator, model):
         self._platforms_emailcenter_update_request_validator = \
             platforms_emailcenter_update_request_validator
-        self._the_clock = the_clock
-        self._sql_engine = sql_engine
+        self._model = model
 
     def on_get(self, req, resp):
         """Get the emailcenter platform for an organization."""
 
         user = req.context['user']
 
-        with self._sql_engine.begin() as conn:
-            platforms_emailcenter_row = self._fetch_platforms_emailcenter(conn, user['id'])
+        try:
+            platforms_emailcenter = self._model.get_platforms_emailcenter(user['id'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Emailcenter does not exist',
+                description='Emailcenter does not exist') from e
 
-            if platforms_emailcenter_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Emailcenter does not exist',
-                    description='Emailcenter does not exist')
-
-        response = {
-            'platformsEmailcenter': {
-                'id': platforms_emailcenter_row['id'],
-                'timeCreatedTs': int(platforms_emailcenter_row['time_created'].timestamp()),
-                'emailName': platforms_emailcenter_row['email_name']
-            }
-        }
+        response = {'platformsEmailcenter': platforms_emailcenter}
 
         jsonschema.validate(response, schemas.PLATFORMS_EMAILCENTER_RESPONSE)
 
@@ -600,33 +546,14 @@ class PlatformsEmailcenterResource(object):
                 title='Invalid emailcenter update data',
                 description='Invalid data "{}"'.format(platforms_emailcenter_update_request_raw)) from e
 
-        with self._sql_engine.begin() as conn:
-            platforms_emailcenter_row = self._fetch_platforms_emailcenter(conn, user['id'])
+        try:
+            platforms_emailcenter = self._model.update_platforms_emailcenter(user['id'], **platforms_emailcenter_update_request)
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Emailcenter does not exist',
+                description='Emailcenter does not exist')
 
-            if platforms_emailcenter_row is None:
-                raise falcon.HTTPNotFound(
-                    title='Emailcenter does not exist',
-                    description='Emailcenter does not exist')
-
-            properties_to_update = dict(
-                (_PLATFORMS_EMAILCENTER_E2I_FIELD_NAMES[k], v) for (k, v)
-                in platforms_emailcenter_update_request.items())
-
-            update_platforms_emailcenter = _platforms_emailcenter \
-                .update() \
-                .where(_platforms_emailcenter.c.id == platforms_emailcenter_row['id']) \
-                .values(**properties_to_update)
-
-            result = conn.execute(update_platforms_emailcenter)
-            result.close()
-
-        response = {
-            'platformsEmailcenter': {
-                'id': platforms_emailcenter_row['id'],
-                'timeCreatedTs': int(platforms_emailcenter_row['time_created'].timestamp()),
-                'emailName': platforms_emailcenter_row['email_name']
-            }
-        }
+        response = {'platformsEmailcenter': platforms_emailcenter}
         
         response['platformsEmailcenter'].update(platforms_emailcenter_update_request)
 
@@ -634,22 +561,3 @@ class PlatformsEmailcenterResource(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
-
-    def _fetch_platforms_emailcenter(self, conn, user_id):
-        fetch_platforms_emailcenter = sql.sql \
-            .select([
-                _platforms_emailcenter.c.id,
-                _platforms_emailcenter.c.time_created,
-                _platforms_emailcenter.c.email_name
-                ]) \
-            .select_from(_org_user
-                         .join(_org, _org.c.id == _org_user.c.org_id)
-                         .join(_platforms_emailcenter,
-                               _platforms_emailcenter.c.org_id == _org_user.c.org_id)) \
-            .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_platforms_emailcenter)
-        platforms_emailcenter_row = result.fetchone()
-        result.close()
-
-        return platforms_emailcenter_row

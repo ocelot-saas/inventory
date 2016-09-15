@@ -348,16 +348,68 @@ class Model(object):
         return _i2e(platforms_website_row)
 
     def get_platforms_callcenter(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_platforms_callcenter = self._fetch_platforms_callcenter(user_id)
+
+            result = conn.execute(fetch_platforms_callcenter)
+            platforms_callcenter_row = result.fetchone()
+            result.close()
+
+        if platforms_callcenter_row is None:
+            raise OrgDoesNotExistError()
+
+        return _i2e(platforms_callcenter_row)
 
     def update_platforms_callcenter(self, user_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            find_platforms_callcenter_id = self._fetch_platforms_callcenter(user_id, True)
+            
+            update_platforms_callcenter = _platforms_callcenter \
+                .update() \
+                .returning(*_platforms_callcenter_columns) \
+                .values(**_e2i(kwargs)) \
+                .where(_platforms_callcenter.c.id == find_platforms_callcenter_id.as_scalar())
+
+            result = conn.execute(update_platforms_callcenter)
+            platforms_callcenter_row = result.fetchone()
+            result.close()
+            
+        if platforms_callcenter_row is None:
+            raise OrgDoesNotExistError()
+
+        return _i2e(platforms_callcenter_row)
 
     def get_platforms_emailcenter(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_platforms_emailcenter = self._fetch_platforms_emailcenter(user_id)
+
+            result = conn.execute(fetch_platforms_emailcenter)
+            platforms_emailcenter_row = result.fetchone()
+            result.close()
+
+        if platforms_emailcenter_row is None:
+            raise OrgDoesNotExistError()
+
+        return _i2e(platforms_emailcenter_row)
 
     def update_platforms_emailcenter(self, user_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            find_platforms_emailcenter_id = self._fetch_platforms_emailcenter(user_id, True)
+            
+            update_platforms_emailcenter = _platforms_emailcenter \
+                .update() \
+                .returning(*_platforms_emailcenter_columns) \
+                .values(**_e2i(kwargs)) \
+                .where(_platforms_emailcenter.c.id == find_platforms_emailcenter_id.as_scalar())
+
+            result = conn.execute(update_platforms_emailcenter)
+            platforms_emailcenter_row = result.fetchone()
+            result.close()
+            
+        if platforms_emailcenter_row is None:
+            raise OrgDoesNotExistError()
+
+        return _i2e(platforms_emailcenter_row)
 
     @staticmethod
     def _fetch_org(conn, user_id, just_id=False):
@@ -384,6 +436,26 @@ class Model(object):
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_platforms_website,
                                _platforms_website.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+    @staticmethod
+    def _fetch_platforms_callcenter(user_id, just_id=False):
+        return sql \
+            .select([_platforms_callcenter.c.id] if just_id else _platforms_callcenter_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_callcenter,
+                               _platforms_callcenter.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+    @staticmethod
+    def _fetch_platforms_emailcenter(user_id, just_id=False):
+        return sql \
+            .select([_platforms_emailcenter.c.id] if just_id else _platforms_emailcenter_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_emailcenter,
+                               _platforms_emailcenter.c.org_id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
 
 
