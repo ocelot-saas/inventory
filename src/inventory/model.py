@@ -108,7 +108,7 @@ class OrgDoesNotExist(Error):
     pass
 
 
-class SectionDoesNotExist(Error):
+class MenuSectionDoesNotExist(Error):
     pass
 
 
@@ -195,7 +195,7 @@ class Model(object):
             result.close()
 
         if org_row is None:
-            raise OrgDoesNotExist()
+            raise OrgDoesNotExistError()
 
         return _i2e(org_row)
 
@@ -208,7 +208,7 @@ class Model(object):
             result.close()
 
         if restaurant_row is None:
-            raise OrgDoesNotExist()
+            raise OrgDoesNotExistError()
 
         return _i2e(restaurant_row)
 
@@ -239,6 +239,7 @@ class Model(object):
             
             create_menu_section = _menu_section \
                 .insert() \
+                .returning(*_menu_section_columns) \
                 .values(
                     org_id=fetch_org.as_scalar(),
                     time_created=right_now,
@@ -246,25 +247,18 @@ class Model(object):
                     description=description)
 
             result = conn.execute(create_menu_section)
-            menu_section_id = result.inserted_primary_key[0]
+            menu_section_row = result.fetchone()
             result.close()
 
-        return {
-            'id': menu_section_id,
-            'timeCreatedTs': int(right_now.timestamp()),
-            'name': name,
-            'description': description
-        }
+        if menu_section_row is None:
+            raise OrgDoesNotExistError()
+
+        return _i2e(menu_section_row)
 
     def get_all_menu_sections(self, user_id):
         with self._sql_engine.begin() as conn:
             fetch_menu_sections = sql \
-                .select([
-                    _menu_section.c.id,
-                    _menu_section.c.time_created,
-                    _menu_section.c.name,
-                    _menu_section.c.description
-                ]) \
+                .select(_menu_section_columns) \
                 .select_from(_org_user
                              .join(_org, _org.c.id == _org_user.c.org_id)
                              .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
@@ -281,12 +275,7 @@ class Model(object):
     def get_menu_section(self, user_id, section_id):
         with self._sql_engine.begin() as conn:
             fetch_menu_section = sql \
-                .select([
-                    _menu_section.c.id,
-                    _menu_section.c.time_created,
-                    _menu_section.c.name,
-                    _menu_section.c.description
-                ]) \
+                .select(_menu_section_columns) \
                 .select_from(_org_user
                              .join(_org, _org.c.id == _org_user.c.org_id)
                              .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
@@ -300,7 +289,7 @@ class Model(object):
             result.close()
 
         if menu_section_row is None:
-            raise SectionDoesNotExist()
+            raise MenuSectionDoesNotExistError()
 
         return _i2e(menu_section_row)
 
@@ -328,53 +317,33 @@ class Model(object):
 
     def get_platforms_website(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_platforms_website = sql \
-                .select([
-                    _platforms_website.c.id,
-                    _platforms_website.c.time_created,
-                    _platforms_website.c.subdomain
-                ]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_platforms_website,
-                                   _platforms_website.c.org_id == _org_user.c.org_id)) \
-                .where(_org_user.c.user_id == user_id)
+            fetch_platforms_website = self._fetch_platforms_website(user_id)
 
             result = conn.execute(fetch_platforms_website)
             platforms_website_row = result.fetchone()
             result.close()
 
         if platforms_website_row is None:
-            raise OrgDoesNotExist()
+            raise OrgDoesNotExistError()
 
         return _i2e(platforms_website_row)
 
     def update_platforms_website(self, user_id, **kwargs):
         with self._sql_engine.begin() as conn:
-            find_platforms_website_id = sql \
-                .select([_platforms_website.c.id]) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_platforms_website,
-                                   _platforms_website.c.org_id == _org_user.c.org_id)) \
-                .where(_org_user.c.user_id == user_id) \
-                .as_scalar()
+            find_platforms_website_id = self._fetch_platforms_website(user_id, True)
+            
             update_platforms_website = _platforms_website \
                 .update() \
-                .returning(
-                    _platforms_website.c.id,
-                    _platforms_website.c.time_created,
-                    _platforms_website.c.subdomain
-                ) \
+                .returning(*_platforms_website_columns) \
                 .values(**_e2i(kwargs)) \
-                .where(_platforms_website.c.id == find_platforms_website_id)
+                .where(_platforms_website.c.id == find_platforms_website_id.as_scalar())
 
             result = conn.execute(update_platforms_website)
             platforms_website_row = result.fetchone()
             result.close()
             
         if platforms_website_row is None:
-            raise OrgDoesNotExist()
+            raise OrgDoesNotExistError()
 
         return _i2e(platforms_website_row)
 
@@ -405,6 +374,16 @@ class Model(object):
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
+            .where(_org_user.c.user_id == user_id)
+
+    @staticmethod
+    def _fetch_platforms_website(user_id, just_id=False):
+        return sql \
+            .select([_platforms_website.c.id] if just_id else _platforms_website_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_platforms_website,
+                               _platforms_website.c.org_id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
 
 
