@@ -138,7 +138,7 @@ class Model(object):
 
                 conn.execute(create_restaurant).close()
 
-                # Create basic plaforms with basic info
+                # Create basic platforms with basic info
 
                 create_platforms_website = _platforms_website \
                     .insert() \
@@ -176,7 +176,11 @@ class Model(object):
 
     def get_org(self, user_id):
         with self._sql_engine.begin() as conn:
-            org_row = self._fetch_org(conn, user_id)
+            fetch_org = self._fetch_org(conn, user_id)
+
+            result = conn.execute(fetch_org)
+            org_row = result.fetchone()
+            result.close()
 
         if org_row is None:
             raise OrgDoesNotExist()
@@ -216,12 +220,12 @@ class Model(object):
         right_now = self._the_clock.now()
         
         with self._sql_engine.begin() as conn:
-            org_row = self._fetch_org(conn, user_id)
+            fetch_org = self._fetch_org(conn, user_id, just_id=True)
             
             create_menu_section = _menu_section \
                 .insert() \
                 .values(
-                    org_id=org_row['id'],
+                    org_id=fetch_org.as_scalar(),
                     time_created=right_now,
                     name=name,
                     description=description)
@@ -242,7 +246,6 @@ class Model(object):
             fetch_menu_sections = sql \
                 .select([
                     _menu_section.c.id,
-                    _menu_section.c.org_id,
                     _menu_section.c.time_created,
                     _menu_section.c.name,
                     _menu_section.c.description
@@ -265,7 +268,6 @@ class Model(object):
             fetch_menu_section = sql \
                 .select([
                     _menu_section.c.id,
-                    _menu_section.c.org_id,
                     _menu_section.c.time_created,
                     _menu_section.c.name,
                     _menu_section.c.description
@@ -374,21 +376,15 @@ class Model(object):
         pass
 
     @staticmethod
-    def _fetch_org(conn, user_id):
-        fetch_org = sql \
-            .select([
+    def _fetch_org(conn, user_id, just_id=False):
+        return sql \
+            .select([_org.c.id] if just_id else [
                 _org.c.id,
                 _org.c.time_created
             ]) \
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_org)
-        org_row = result.fetchone()
-        result.close()
-
-        return org_row
 
     @staticmethod
     def _fetch_restaurant(conn, user_id):

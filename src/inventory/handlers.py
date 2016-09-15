@@ -270,7 +270,6 @@ class MenuSectionsResource(object):
 
         self._cors_response(resp)
 
-        right_now = self._the_clock.now()
         user = req.context['user']
 
         try:
