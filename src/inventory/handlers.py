@@ -276,7 +276,8 @@ class MenuSectionsResource(object):
 class MenuSectionResource(object):
     """A section in the menu for an organization."""
 
-    def __init__(self, model):
+    def __init__(self, menu_section_update_request_validator, model):
+        self._menu_section_update_request_validator = menu_section_update_request_validator
         self._model = model
 
     def on_get(self, req, resp, section_id):
@@ -287,16 +288,12 @@ class MenuSectionResource(object):
 
         try:
             menu_section = self._model.get_menu_section(user['id'], section_id)
-        except model.OrgDoesNotExist as e:
-            raise falcon.HTTPNotFound(
-                title='Org does not exist',
-                description='Org does not exist')
-        except model.SectionDoesNotExist as e:
+        except model.MenuSectionDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Section does not exist',
                 description='Section does not exist')
 
-        response = {'menuSection': menuSection}
+        response = {'menuSection': menu_section}
 
         jsonschema.validate(response, schemas.MENU_SECTION_RESPONSE)
 
@@ -309,8 +306,30 @@ class MenuSectionResource(object):
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
+        try:
+            menu_section_update_request_raw = req.stream.read().decode('utf-8')
+            menu_section_update_request = \
+                self._menu_section_update_request_validator.validate(
+                    menu_section_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid menu section update data',
+                description='Invalid data "{}"'.format(menu_section_update_request_raw)) from e
+
+        try:
+            menu_section = self._model.update_menu_section(
+                user['id'], section_id, **menu_section_update_request)
+        except model.MenuSectionDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Section does not exist',
+                description='Section does not exist')
+
+        response = {'menuSection': menu_section}
+
+        jsonschema.validate(response, schemas.MENU_SECTION_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuSectionResource'
+        resp.body = json.dumps(response)
 
     def on_delete(self, req, resp, section_id):
         """Remove a particular menu section."""

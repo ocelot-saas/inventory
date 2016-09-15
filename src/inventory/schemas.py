@@ -398,6 +398,29 @@ MENU_SECTIONS_RESPONSE = {
 }
 
 
+MENU_SECTION_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu section update request',
+    'description': 'Update request for a menu section',
+    'type': 'object',
+    'properties': {
+        'name': {
+            'description': 'The name of the menu section',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu section',
+            'type': 'string'
+        },
+    },
+    'anyOf': [
+        {'required': ['name']},
+        {'required': ['description']},
+    ],
+    'additionalProperties': False
+}
+
+
 MENU_SECTION_RESPONSE = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Menu section response',

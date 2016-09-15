@@ -108,7 +108,7 @@ class OrgDoesNotExist(Error):
     pass
 
 
-class MenuSectionDoesNotExist(Error):
+class MenuSectionDoesNotExistError(Error):
     pass
 
 
@@ -274,15 +274,7 @@ class Model(object):
 
     def get_menu_section(self, user_id, section_id):
         with self._sql_engine.begin() as conn:
-            fetch_menu_section = sql \
-                .select(_menu_section_columns) \
-                .select_from(_org_user
-                             .join(_org, _org.c.id == _org_user.c.org_id)
-                             .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
-                .where(sql.and_(
-                    _org_user.c.user_id == user['id'],
-                    _menu_section.c.id == section_id,
-                    _menu_section.c.time_archived == None))
+            fetch_menu_section = self._fetch_menu_section(user_id, section_id)
 
             result = conn.execute(fetch_menu_section)
             menu_section_row = result.fetchone()
@@ -294,7 +286,23 @@ class Model(object):
         return _i2e(menu_section_row)
 
     def update_menu_section(self, user_id, section_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            find_menu_section = self._fetch_menu_section(user_id, section_id, True)
+
+            update_menu_section = _menu_section \
+                .update() \
+                .returning(*_menu_section_columns) \
+                .values(**_e2i(kwargs)) \
+                .where(_menu_section.c.id == find_menu_section.as_scalar())
+
+            result = conn.execute(update_menu_section)
+            menu_section_row = result.fetchone()
+            result.close()
+
+        if menu_section_row is None:
+            raise MenuSectionDoesNotExistError()
+
+        return _i2e(menu_section_row)
 
     def delete_menu_section(self, user_id, section_id):
         pass
@@ -412,7 +420,7 @@ class Model(object):
         return _i2e(platforms_emailcenter_row)
 
     @staticmethod
-    def _fetch_org(conn, user_id, just_id=False):
+    def _fetch_org(user_id, just_id=False):
         return sql \
             .select([_org.c.id] if just_id else _org_columns) \
             .select_from(_org_user
@@ -420,13 +428,25 @@ class Model(object):
             .where(_org_user.c.user_id == user_id)
 
     @staticmethod
-    def _fetch_restaurant(conn, user_id, just_id=False):
+    def _fetch_restaurant(user_id, just_id=False):
         return sql \
             .select([_restaurant.c.id] if just_id else _restaurant_columns) \
             .select_from(_org_user
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
+
+    @staticmethod
+    def _fetch_menu_section(user_id, section_id, just_id=False):
+        return sql \
+            .select([_menu_section.c.id] if just_id else _menu_section_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_menu_section, _menu_section.c.org_id == _org_user.c.org_id)) \
+            .where(sql.and_(
+                _org_user.c.user_id == user_id,
+                _menu_section.c.id == section_id,
+                _menu_section.c.time_archived == None))
 
     @staticmethod
     def _fetch_platforms_website(user_id, just_id=False):

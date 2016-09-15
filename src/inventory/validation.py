@@ -258,24 +258,24 @@ class RestaurantUpdateRequestValidator(object):
 
 
 class MenuSectionsCreationRequestValidator(object):
-    """Validator for a menu section."""
+    """Validator for a menu section creation request."""
 
     def __init__(self, name_validator, description_validator):
         self._name_validator = name_validator
         self._description_validator = description_validator
 
-    def validate(self, menu_section_creation_request_raw):
+    def validate(self, menu_sections_creation_request_raw):
         try:
-            menu_section_creation_request = json.loads(menu_section_creation_request_raw)
+            menu_sections_creation_request = json.loads(menu_sections_creation_request_raw)
             jsonschema.validate(
-                menu_section_creation_request,
+                menu_sections_creation_request,
                 schemas.MENU_SECTIONS_CREATION_REQUEST)
 
-            menu_section_creation_request['name'] = \
-                self._name_validator = self._name_validator.validate(menu_section_creation_request['name'])
-            menu_section_creation_request['description'] = \
+            menu_sections_creation_request['name'] = \
+                self._name_validator = self._name_validator.validate(menu_sections_creation_request['name'])
+            menu_sections_creation_request['description'] = \
                 self._description_validator = self._description_validator.validate(
-                    menu_section_creation_request['description'])
+                    menu_sections_creation_request['description'])
         except ValueError as e:
             raise Error('Could not decode org creation request') from e
         except jsonschema.ValidationError as e:
@@ -285,7 +285,42 @@ class MenuSectionsCreationRequestValidator(object):
         except Exception as e:
             raise Error('Other error') from e
 
-        return menu_section_creation_request
+        return menu_sections_creation_request
+
+
+class MenuSectionUpdateRequestValidator(object):
+    """Validator for a menu section update request."""
+
+    def __init__(self, name_validator, description_validator):
+        self._name_validator = name_validator
+        self._description_validator = description_validator
+
+    def validate(self, menu_section_update_request_raw):
+        try:
+            menu_section_update_request = json.loads(menu_section_update_request_raw)
+            jsonschema.validate(
+                menu_section_update_request,
+                schemas.MENU_SECTION_UPDATE_REQUEST)
+
+            if 'name' in menu_section_update_request:
+                menu_section_update_request['name'] = \
+                    self._name_validator = self._name_validator.validate(
+                        menu_section_update_request['name'])
+
+            if 'description' in menu_section_update_request:
+                menu_section_update_request['description'] = \
+                    self._description_validator = self._description_validator.validate(
+                        menu_section_update_request['description'])
+        except ValueError as e:
+            raise Error('Could not decode org creation request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate menu section creation request') from e
+        except Error as e:
+            raise Error('Could not validate menu section creation request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return menu_section_update_request
 
 
 class PlatformsWebsiteUpdateRequestValidator(object):
