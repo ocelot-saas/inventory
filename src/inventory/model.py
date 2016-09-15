@@ -189,7 +189,11 @@ class Model(object):
 
     def get_restaurant(self, user_id):
         with self._sql_engine.begin() as conn:
-            restaurant_row = self._fetch_restaurant(conn, user_id)
+            fetch_restaurant = self._fetch_restaurant(conn, user_id)
+
+            result = conn.execute(fetch_restaurant)
+            restaurant_row = result.fetchone()
+            result.close()
 
         if restaurant_row is None:
             raise OrgDoesNotExist()
@@ -198,23 +202,31 @@ class Model(object):
 
     def update_restaurant(self, user_id, **kwargs):
         with self._sql_engine.begin() as conn:
-            restaurant_row = self._fetch_restaurant(conn, user_id)
-
-            if restaurant_row is None:
-                raise OrgDoesNotExist()
+            fetch_restaurant = self._fetch_restaurant(conn, user_id, just_id=True)
 
             update_restaurant = _restaurant \
                 .update() \
-                .where(_restaurant.c.id == restaurant_row['id']) \
+                .returning(
+                    _restaurant.c.id,
+                    _restaurant.c.time_created,
+                    _restaurant.c.name,
+                    _restaurant.c.description,
+                    _restaurant.c.keywords,
+                    _restaurant.c.address,
+                    _restaurant.c.opening_hours,
+                    _restaurant.c.image_set
+                ) \
+                .where(_restaurant.c.id == fetch_restaurant.as_scalar()) \
                 .values(**_e2i(kwargs))
 
             result = conn.execute(update_restaurant)
+            restaurant_row = result.fetchone()
             result.close()
 
-        restaurant = _i2e(restaurant_row)
-        restaurant.update(kwargs)
+        if restaurant_row is None:
+            raise OrgDoesNotExistError()
 
-        return restaurant
+        return _i2e(restaurant_row)
 
     def create_menu_section(self, user_id, name, description):
         right_now = self._the_clock.now()
@@ -387,9 +399,9 @@ class Model(object):
             .where(_org_user.c.user_id == user_id)
 
     @staticmethod
-    def _fetch_restaurant(conn, user_id):
-        fetch_restaurant = sql \
-            .select([
+    def _fetch_restaurant(conn, user_id, just_id=False):
+        return sql \
+            .select([_restaurant.c.id] if just_id else [
                 _restaurant.c.id,
                 _restaurant.c.time_created,
                 _restaurant.c.name,
@@ -403,12 +415,6 @@ class Model(object):
                          .join(_org, _org.c.id == _org_user.c.org_id)
                          .join(_restaurant, _restaurant.c.org_id == _org_user.c.org_id)) \
             .where(_org_user.c.user_id == user_id)
-
-        result = conn.execute(fetch_restaurant)
-        restaurant_row = result.fetchone()
-        result.close()
-
-        return restaurant_row
 
 
 def _e2i(d):
