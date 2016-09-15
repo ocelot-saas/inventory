@@ -239,7 +239,7 @@ class Model(object):
 
     def get_all_menu_sections(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_menu_sections = sql.sql \
+            fetch_menu_sections = sql \
                 .select([
                     _menu_section.c.id,
                     _menu_section.c.org_id,
@@ -262,7 +262,7 @@ class Model(object):
 
     def get_menu_section(self, user_id, section_id):
         with self._sql_engine.begin() as conn:
-            fetch_menu_section = sql.sql \
+            fetch_menu_section = sql \
                 .select([
                     _menu_section.c.id,
                     _menu_section.c.org_id,
@@ -311,7 +311,7 @@ class Model(object):
 
     def get_platforms_website(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_platforms_website = sql.sql \
+            fetch_platforms_website = sql \
                 .select([
                     _platforms_website.c.id,
                     _platforms_website.c.time_created,
@@ -375,7 +375,7 @@ class Model(object):
 
     @staticmethod
     def _fetch_org(conn, user_id):
-        fetch_org = sql.sql \
+        fetch_org = sql \
             .select([
                 _org.c.id,
                 _org.c.time_created
@@ -392,7 +392,7 @@ class Model(object):
 
     @staticmethod
     def _fetch_restaurant(conn, user_id):
-        fetch_restaurant = sql.sql \
+        fetch_restaurant = sql \
             .select([
                 _restaurant.c.id,
                 _restaurant.c.time_created,
