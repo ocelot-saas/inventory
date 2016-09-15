@@ -5,101 +5,10 @@ import hashlib
 
 import falcon
 import jsonschema
-import slugify
-import sqlalchemy as sql
-import sqlalchemy.dialects.postgresql as postgresql
 
 import inventory.model as model
 import inventory.validation as validation
 import inventory.schemas as schemas
-
-
-_metadata = sql.MetaData(schema='inventory')
-
-_org = sql.Table(
-    'org', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)))
-
-_org_user = sql.Table(
-    'org_user', _metadata,
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('user_id', sql.Integer, unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.PrimaryKeyConstraint('org_id', 'user_id'))
-
-_restaurant = sql.Table(
-    'restaurant', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
-    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
-    sql.Column('address', sql.Text()),
-    sql.Column('opening_hours', postgresql.JSON()),
-    sql.Column('image_set', postgresql.JSON()))
-
-_menu_section = sql.Table(
-    'menu_section', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id)),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
-    sql.UniqueConstraint('id', 'org_id', name='menu_section_uk_id_org_id'))
-
-_menu_item = sql.Table(
-    'menu_item', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('section_id', sql.Integer),
-    sql.Column('org_id', sql.Integer),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('time_archived', sql.DateTime(timezone=True), nullable=True),
-    sql.Column('name', sql.Text()),
-    sql.Column('description', sql.Text()),
-    sql.Column('keywords', postgresql.ARRAY(sql.Text)),
-    sql.Column('ingredients', postgresql.JSON()),
-    sql.Column('image_set', postgresql.JSON()),
-    sql.ForeignKeyConstraint(['section_id', 'org_id'], [_menu_section.c.id, _menu_section.c.org_id]),
-    sql.UniqueConstraint('id', 'section_id', 'org_id'))
-
-_platforms_website = sql.Table(
-    'platforms_website', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('subdomain', sql.Text()))
-
-_platforms_callcenter = sql.Table(
-    'platforms_callcenter', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('phone_number', sql.Text()))
-
-_platforms_emailcenter = sql.Table(
-    'platforms_emailcenter', _metadata,
-    sql.Column('id', sql.Integer, primary_key=True),
-    sql.Column('org_id', sql.Integer, sql.ForeignKey(_org.c.id), unique=True),
-    sql.Column('time_created', sql.DateTime(timezone=True)),
-    sql.Column('email_name', sql.Text()))
-    
-
-_PLATFORMS_WEBSITE_E2I_FIELD_NAMES = {
-    'subdomain': 'subdomain'
-}
-
-
-_PLATFORMS_CALLCENTER_E2I_FIELD_NAMES = {
-    'phoneNumber': 'phone_number'
-}
-
-
-_PLATFORMS_EMAILCENTER_E2I_FIELD_NAMES = {
-    'emailName': 'email_name'
-}
 
 
 class OrgResource(object):
@@ -337,9 +246,14 @@ class MenuSectionResource(object):
         section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
-        resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuSectionResource'
+        try:
+            self._model.delete_menu_section(user['id'], section_id)
+        except model.MenuSectionDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Section does not exist',
+                description='Section does not exist')            
 
+        resp.status = falcon.HTTP_204
 
     @staticmethod
     def _validate_section_id(section_id):

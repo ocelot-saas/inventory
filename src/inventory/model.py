@@ -188,7 +188,7 @@ class Model(object):
 
     def get_org(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_org = self._fetch_org(conn, user_id)
+            fetch_org = self._fetch_org(user_id)
 
             result = conn.execute(fetch_org)
             org_row = result.fetchone()
@@ -201,7 +201,7 @@ class Model(object):
 
     def get_restaurant(self, user_id):
         with self._sql_engine.begin() as conn:
-            fetch_restaurant = self._fetch_restaurant(conn, user_id)
+            fetch_restaurant = self._fetch_restaurant(user_id)
 
             result = conn.execute(fetch_restaurant)
             restaurant_row = result.fetchone()
@@ -214,7 +214,7 @@ class Model(object):
 
     def update_restaurant(self, user_id, **kwargs):
         with self._sql_engine.begin() as conn:
-            fetch_restaurant = self._fetch_restaurant(conn, user_id, just_id=True)
+            fetch_restaurant = self._fetch_restaurant(user_id, just_id=True)
 
             update_restaurant = _restaurant \
                 .update() \
@@ -235,7 +235,7 @@ class Model(object):
         right_now = self._the_clock.now()
         
         with self._sql_engine.begin() as conn:
-            fetch_org = self._fetch_org(conn, user_id, just_id=True)
+            fetch_org = self._fetch_org(user_id, just_id=True)
             
             create_menu_section = _menu_section \
                 .insert() \
@@ -305,7 +305,22 @@ class Model(object):
         return _i2e(menu_section_row)
 
     def delete_menu_section(self, user_id, section_id):
-        pass
+        right_now = self._the_clock.now()
+
+        with self._sql_engine.begin() as conn:
+            find_menu_section = self._fetch_menu_section(user_id, section_id, True)
+
+            update_menu_section = _menu_section \
+                .update() \
+                .values(time_archived=right_now) \
+                .where(_menu_section.c.id == find_menu_section.as_scalar())
+
+            result = conn.execute(update_menu_section)
+            rowcount = result.rowcount
+            result.close()
+
+        if rowcount != 1:
+            raise MenuSectionDoesNotExistError()
 
     def create_menu_item(self, user_id, section_id, name, description, keywords,
                          ingredients, image_set):
