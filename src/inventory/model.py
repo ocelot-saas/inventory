@@ -192,10 +192,11 @@ class Model(object):
 
             result = conn.execute(fetch_org)
             org_row = result.fetchone()
-            result.close()
 
-        if org_row is None:
-            raise OrgDoesNotExistError()
+            if org_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(org_row)
 
@@ -205,10 +206,11 @@ class Model(object):
 
             result = conn.execute(fetch_restaurant)
             restaurant_row = result.fetchone()
-            result.close()
 
-        if restaurant_row is None:
-            raise OrgDoesNotExistError()
+            if restaurant_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(restaurant_row)
 
@@ -224,10 +226,11 @@ class Model(object):
 
             result = conn.execute(update_restaurant)
             restaurant_row = result.fetchone()
-            result.close()
 
-        if restaurant_row is None:
-            raise OrgDoesNotExistError()
+            if restaurant_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(restaurant_row)
 
@@ -248,10 +251,11 @@ class Model(object):
 
             result = conn.execute(create_menu_section)
             menu_section_row = result.fetchone()
-            result.close()
 
-        if menu_section_row is None:
-            raise OrgDoesNotExistError()
+            if menu_section_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(menu_section_row)
 
@@ -278,10 +282,11 @@ class Model(object):
 
             result = conn.execute(fetch_menu_section)
             menu_section_row = result.fetchone()
-            result.close()
 
-        if menu_section_row is None:
-            raise MenuSectionDoesNotExistError()
+            if menu_section_row is None:
+                raise MenuSectionDoesNotExistError()
+
+            result.close()
 
         return _i2e(menu_section_row)
 
@@ -297,10 +302,11 @@ class Model(object):
 
             result = conn.execute(update_menu_section)
             menu_section_row = result.fetchone()
-            result.close()
 
-        if menu_section_row is None:
-            raise MenuSectionDoesNotExistError()
+            if menu_section_row is None:
+                raise MenuSectionDoesNotExistError()
+
+            result.close()
 
         return _i2e(menu_section_row)
 
@@ -317,10 +323,11 @@ class Model(object):
 
             result = conn.execute(update_menu_section)
             rowcount = result.rowcount
-            result.close()
 
-        if rowcount != 1:
-            raise MenuSectionDoesNotExistError()
+            if rowcount != 1:
+                raise MenuSectionDoesNotExistError()
+
+            result.close()
 
     def create_menu_item(self, user_id, section_id, name, description, keywords,
                          ingredients, image_set):
@@ -344,11 +351,12 @@ class Model(object):
 
             result = conn.execute(create_menu_item)
             menu_item_row = result.fetchone()
-            result.close()
 
-        if menu_item_row is None:
-            # Or item does not exist
-            raise OrgDoesNotExistError()
+            if menu_item_row is None:
+                # Or section does not exist
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(menu_item_row)
 
@@ -370,10 +378,11 @@ class Model(object):
 
             result = conn.execute(fetch_platforms_website)
             platforms_website_row = result.fetchone()
-            result.close()
 
-        if platforms_website_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_website_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_website_row)
 
@@ -389,10 +398,11 @@ class Model(object):
 
             result = conn.execute(update_platforms_website)
             platforms_website_row = result.fetchone()
-            result.close()
             
-        if platforms_website_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_website_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_website_row)
 
@@ -402,10 +412,11 @@ class Model(object):
 
             result = conn.execute(fetch_platforms_callcenter)
             platforms_callcenter_row = result.fetchone()
-            result.close()
 
-        if platforms_callcenter_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_callcenter_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_callcenter_row)
 
@@ -421,10 +432,11 @@ class Model(object):
 
             result = conn.execute(update_platforms_callcenter)
             platforms_callcenter_row = result.fetchone()
-            result.close()
             
-        if platforms_callcenter_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_callcenter_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_callcenter_row)
 
@@ -434,10 +446,11 @@ class Model(object):
 
             result = conn.execute(fetch_platforms_emailcenter)
             platforms_emailcenter_row = result.fetchone()
-            result.close()
 
-        if platforms_emailcenter_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_emailcenter_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_emailcenter_row)
 
@@ -453,10 +466,11 @@ class Model(object):
 
             result = conn.execute(update_platforms_emailcenter)
             platforms_emailcenter_row = result.fetchone()
-            result.close()
             
-        if platforms_emailcenter_row is None:
-            raise OrgDoesNotExistError()
+            if platforms_emailcenter_row is None:
+                raise OrgDoesNotExistError()
+
+            result.close()
 
         return _i2e(platforms_emailcenter_row)
 

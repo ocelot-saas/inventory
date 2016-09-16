@@ -21,6 +21,19 @@ class Error(Exception):
         return 'Validation error! Reason:\n {}'.format(str(self._reason))
 
 
+class IdValidator(object):
+    """Validate an id."""
+
+    def __init__(self):
+        pass
+
+    def validate(self, id):
+        if id <= 0:
+            raise Error('Id is negative')
+
+        return id
+
+
 class ImageSetValidator(object):
     """Validator for an image set."""
 
@@ -43,7 +56,61 @@ class ImageSetValidator(object):
             raise Error('Could not structurally validate image set') from e
 
         return image_set_raw
-    
+
+
+class KeywordsValidator(object):
+    """Validator for a restaurant keywords set."""
+
+    MAX_KEYWORD_SIZE = 100
+
+    def __init__(self):
+        pass
+
+    def validate(self, keywords_raw):
+        try:
+            jsonschema.validate(keywords_raw, schemas.KEYWORDS)
+            keywords_unsorted = [kw.strip() for kw in keywords_raw]
+
+            if any(kw == '' for kw in keywords_unsorted):
+                raise Error('Keyword is empty')
+
+            for kw in keywords_unsorted:
+                if len(kw) > self.MAX_KEYWORD_SIZE:
+                    raise Error('Keyword "{}" is too long'.format(kw))
+
+            keywords = sorted(set(keywords_unsorted))
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate keyword set') from e
+
+        return keywords
+
+
+class IngredientsValidator(object):
+    """Validator for a restaurant ingredients set."""
+
+    MAX_INGREDIENT_SIZE = 100
+
+    def __init__(self):
+        pass
+
+    def validate(self, ingredients_raw):
+        try:
+            jsonschema.validate(ingredients_raw, schemas.INGREDIENTS)
+            ingredients_unsorted = [kw.strip() for kw in ingredients_raw]
+
+            if any(kw == '' for kw in ingredients_unsorted):
+                raise Error('Ingredient is empty')
+
+            for kw in ingredients_unsorted:
+                if len(kw) > self.MAX_INGREDIENT_SIZE:
+                    raise Error('Ingredient "{}" is too long'.format(kw))
+
+            ingredients = sorted(set(ingredients_unsorted))
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate ingredient set') from e
+
+        return ingredients
+
 
 class RestaurantNameValidator(object):
     """Validator for a restaurant name."""
@@ -80,33 +147,6 @@ class RestaurantDescriptionValidator(object):
             raise Error('Description is too long')
 
         return description
-
-
-class RestaurantKeywordsValidator(object):
-    """Validator for a restaurant keywords set."""
-
-    MAX_KEYWORD_SIZE = 100
-
-    def __init__(self):
-        pass
-
-    def validate(self, keywords_raw):
-        try:
-            jsonschema.validate(keywords_raw, schemas.RESTAURANT_KEYWORDS)
-            keywords_unsorted = [kw.strip() for kw in keywords_raw]
-
-            if any(kw == '' for kw in keywords_unsorted):
-                raise Error('Keyword is empty')
-
-            for kw in keywords_unsorted:
-                if len(kw) > self.MAX_KEYWORD_SIZE:
-                    raise Error('Keyword "{}" is too long'.format(kw))
-
-            keywords = sorted(set(keywords_unsorted))
-        except jsonschema.ValidationError as e:
-            raise Error('Could not structurally validate keyword set') from e
-
-        return keywords
 
 
 class RestaurantAddressValidator(object):
@@ -159,11 +199,11 @@ class OrgCreationRequestValidator(object):
     """Validator for an org creation request."""
 
     def __init__(self, restaurant_name_validator, restaurant_description_validator,
-                 restaurant_keywords_validator, restaurant_address_validator,
+                 keywords_validator, restaurant_address_validator,
                  restaurant_opening_hours_validator, image_set_validator):
         self._restaurant_name_validator = restaurant_name_validator
         self._restaurant_description_validator = restaurant_description_validator
-        self._restaurant_keywords_validator = restaurant_keywords_validator
+        self._keywords_validator = keywords_validator
         self._restaurant_address_validator = restaurant_address_validator
         self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
         self._image_set_validator = image_set_validator
@@ -178,7 +218,7 @@ class OrgCreationRequestValidator(object):
             org_creation_request['description'] = \
                 self._restaurant_description_validator.validate(org_creation_request['description'])
             org_creation_request['keywords'] = \
-                self._restaurant_keywords_validator.validate(org_creation_request['keywords'])
+                self._keywords_validator.validate(org_creation_request['keywords'])
             org_creation_request['address'] = \
                 self._restaurant_address_validator.validate(org_creation_request['address'])
             org_creation_request['openingHours'] = \
@@ -203,11 +243,11 @@ class RestaurantUpdateRequestValidator(object):
     """Validator for a restaurant update request."""
 
     def __init__(self, restaurant_name_validator, restaurant_description_validator,
-                 restaurant_keywords_validator, restaurant_address_validator,
+                 keywords_validator, restaurant_address_validator,
                  restaurant_opening_hours_validator, image_set_validator):
         self._restaurant_name_validator = restaurant_name_validator
         self._restaurant_description_validator = restaurant_description_validator
-        self._restaurant_keywords_validator = restaurant_keywords_validator
+        self._keywords_validator = keywords_validator
         self._restaurant_address_validator = restaurant_address_validator
         self._restaurant_opening_hours_validator = restaurant_opening_hours_validator
         self._image_set_validator = image_set_validator
@@ -228,7 +268,7 @@ class RestaurantUpdateRequestValidator(object):
 
             if 'keywords' in restaurant_update_request:
                 restaurant_update_request['keywords'] = \
-                    self._restaurant_keywords_validator.validate(
+                    self._keywords_validator.validate(
                         restaurant_update_request['keywords'])
 
             if 'address' in restaurant_update_request:
@@ -321,6 +361,47 @@ class MenuSectionUpdateRequestValidator(object):
             raise Error('Other error') from e
 
         return menu_section_update_request
+
+
+class MenuItemsCreationRequestValidator(object):
+    """Validator for a menu item creation request."""
+
+    def __init__(self, id_validator, name_validator, description_validator,
+                 keywords_validator, ingredients_validator, image_set_validator):
+        self._id_validator = id_validator
+        self._name_validator = name_validator
+        self._description_validator = description_validator
+        self._keywords_validator = keywords_validator
+        self._ingredients_validator = ingredients_validator
+        self._image_set_validator = image_set_validator
+
+    def validate(self, menu_items_creation_request_raw):
+        try:
+            menu_items_creation_request = json.loads(menu_items_creation_request_raw)
+            jsonschema.validate(menu_items_creation_request, schemas.MENU_ITEMS_CREATION_REQUEST)
+
+            menu_items_creation_request['sectionId'] = \
+                self._id_validator.validate(menu_items_creation_request['sectionId'])
+            menu_items_creation_request['name'] = \
+                self._name_validator.validate(menu_items_creation_request['name'])
+            menu_items_creation_request['description'] = \
+                self._description_validator.validate(menu_items_creation_request['description'])
+            menu_items_creation_request['keywords'] = \
+                self._keywords_validator.validate(menu_items_creation_request['keywords'])
+            menu_items_creation_request['ingredients'] = \
+                self._ingredients_validator.validate(menu_items_creation_request['ingredients'])
+            menu_items_creation_request['imageSet'] = \
+                self._image_set_validator.validate(menu_items_creation_request['imageSet'])
+        except ValueError as e:
+            raise Error('Could not decode menu items creation request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate menu items creation request') from e
+        except Error as e:
+            raise Error('Could not validate menu items creation request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return menu_items_creation_request
 
 
 class PlatformsWebsiteUpdateRequestValidator(object):

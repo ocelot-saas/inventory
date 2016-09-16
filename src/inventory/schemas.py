@@ -91,10 +91,22 @@ IMAGE_SET = {
 }
 
 
-RESTAURANT_KEYWORDS = {
+KEYWORDS = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'title': 'Restaurant keywords',
-    'description': 'The set of keywords for a restaurant',
+    'title': 'Keywords',
+    'description': 'A set of keywords',
+    'type': 'array',
+    'items': {
+        'type': 'string',
+    },
+    'additionalItems': False
+}
+
+
+INGREDIENTS = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Food ingredients',
+    'description': 'The set of ingredients for a restaurant',
     'type': 'array',
     'items': {
         'type': 'string',
@@ -140,7 +152,7 @@ RESTAURANT = {
             'description': 'The description of the restaurant',
             'type': 'string',
         },
-        'keywords': RESTAURANT_KEYWORDS,
+        'keywords': KEYWORDS,
         'address': {
             'description': 'The address of the restaurant',
             'type': 'string',
@@ -178,6 +190,38 @@ MENU_SECTION = {
         }
     },
     'required': ['id', 'timeCreatedTs', 'name', 'description'],
+    'additionalProperties': False
+}
+
+
+MENU_ITEM = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu item',
+    'description': 'Information about a menu item',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the menu item',
+            'type': 'integer'
+        },
+        'timeCreatedTs': {
+            'description': 'The time the menu item was created, in UTC',
+            'type': 'integer',
+        },
+        'name': {
+            'description': 'The name of the menu item',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu item',
+            'type': 'string'
+        },
+        'keywords': KEYWORDS,
+        'ingredients': INGREDIENTS,
+        'imageSet': IMAGE_SET,
+    },
+    'required': ['id', 'timeCreatedTs', 'name', 'description', 'keywords',
+                 'ingredients', 'imageSet'],
     'additionalProperties': False
 }
 
@@ -288,7 +332,7 @@ ORG_CREATION_REQUEST = {
             'description': 'The description of the restaurant',
             'type': 'string',
         },
-        'keywords': RESTAURANT_KEYWORDS,
+        'keywords': KEYWORDS,
         'address': {
             'description': 'The address of the restaurant',
             'type': 'string',
@@ -328,7 +372,7 @@ RESTAURANT_UPDATE_REQUEST = {
             'description': 'The description of the restaurant',
             'type': 'string',
         },
-        'keywords': RESTAURANT_KEYWORDS,
+        'keywords': KEYWORDS,
         'address': {
             'description': 'The address of the restaurant',
             'type': 'string',
@@ -430,6 +474,51 @@ MENU_SECTION_RESPONSE = {
         'menuSection': MENU_SECTION
     },
     'required': ['menuSection'],
+    'additionalProperties': False
+}
+
+
+MENU_ITEMS_CREATION_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu items creation request',
+    'description': 'Creation request for a menu item',
+    'type': 'object',
+    'properties': {
+        'sectionId': {
+            'description': 'The id of the section we are creating the item under',
+            'type': 'integer'
+        },
+        'name': {
+            'description': 'The name of the menu section',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu section',
+            'type': 'string'
+        },
+        'keywords': KEYWORDS,
+        'ingredients': INGREDIENTS,
+        'imageSet': IMAGE_SET,
+    },
+    'required': ['sectionId', 'name', 'description', 'keywords',
+                 'ingredients', 'imageSet'],
+    'additionalProperties': False
+}
+
+
+MENU_ITEMS_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu items response',
+    'description': 'Common response for menu items',
+    'type': 'object',
+    'properties': {
+        'menuItems': {
+            'description': 'The menu sections',
+            'type': 'array',
+            'items': MENU_ITEM
+        }
+    },
+    'required': ['menuItems'],
     'additionalProperties': False
 }
 

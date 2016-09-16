@@ -192,7 +192,7 @@ class MenuSectionResource(object):
     def on_get(self, req, resp, section_id):
         """Get a particular menu section."""
 
-        section_id = self._validate_section_id(section_id)
+        section_id = self.validate_section_id(section_id)
         user = req.context['user']
 
         try:
@@ -212,7 +212,7 @@ class MenuSectionResource(object):
     def on_put(self, req, resp, section_id):
         """Update a particular menu section."""
 
-        section_id = self._validate_section_id(section_id)
+        section_id = self.validate_section_id(section_id)
         user = req.context['user']
 
         try:
@@ -256,7 +256,7 @@ class MenuSectionResource(object):
         resp.status = falcon.HTTP_204
 
     @staticmethod
-    def _validate_section_id(section_id):
+    def validate_section_id(section_id):
         try:
             return int(section_id)
         except ValueError as e:
@@ -268,7 +268,8 @@ class MenuSectionResource(object):
 class MenuItemsResource(object):
     """All the items in the menu for an organization."""
 
-    def __init__(self, model):
+    def __init__(self, menu_items_creation_request_validator, model):
+        self._menu_items_creation_request_validator = menu_items_creation_request_validator
         self._model = model
 
     def on_post(self, req, resp):
@@ -276,16 +277,51 @@ class MenuItemsResource(object):
 
         user = req.context['user']
 
+        try:
+            menu_items_creation_request_raw = req.stream.read().decode('utf-8')
+            menu_items_creation_request = \
+                self._menu_items_creation_request_validator.validate(
+                    menu_items_creation_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid menu item creation data',
+                description='Invalid data "{}"'.format(menu_items_creation_request_raw)) from e
+
+        try:
+            menu_item = self._model.create_menu_item(
+                user['id'], menu_items_creation_request['sectionId'], menu_items_creation_request['name'],
+                menu_items_creation_request['description'], menu_items_creation_request['keywords'],
+                menu_items_creation_request['ingredients'], menu_items_creation_request['imageSet'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
+
+        response = {'menuItems': [menu_item]}
+
+        jsonschema.validate(response, schemas.MENU_ITEMS_RESPONSE)
+
         resp.status = falcon.HTTP_201
-        resp.body = 'Hello MenuItemsResource'        
+        resp.body = json.dumps(response)
 
     def on_get(self, req, resp):
         """Get a particular menu item."""
 
         user = req.context['user']
 
+        try:
+            menu_items = self._model.get_all_menu_items(user['id'])
+        except model.OrgDoesNotExist as e:
+            raise falcon.HTTPNotFound(
+                title='Org does not exist',
+                description='Org does not exist')
+
+        response = {'menuItems': menu_items}
+
+        jsonschema.validate(response, schemas.MENU_ITEMS_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuItemsResource'
+        resp.body = json.dumps(response)
 
 
 class MenuItemResource(object):

@@ -22,23 +22,25 @@ cors_middleware = falcon_cors.CORS(
 
 app = falcon.API(middleware=[auth_middleware, cors_middleware])
 
+id_validator = validation.IdValidator()
 restaurant_name_validator = validation.RestaurantNameValidator()
 restaurant_description_validator = validation.RestaurantDescriptionValidator()
-restaurant_keywords_validator = validation.RestaurantKeywordsValidator()
+keywords_validator = validation.KeywordsValidator()
+ingredients_validator = validation.IngredientsValidator()
 restaurant_address_validator = validation.RestaurantAddressValidator()
 restaurant_opening_hours_validator = validation.RestaurantOpeningHoursValidator()
 image_set_validator = validation.ImageSetValidator()
 org_creation_request_validator = validation.OrgCreationRequestValidator(
     restaurant_name_validator=restaurant_name_validator,
     restaurant_description_validator=restaurant_description_validator,
-    restaurant_keywords_validator=restaurant_keywords_validator,
+    keywords_validator=keywords_validator,
     restaurant_address_validator=restaurant_address_validator,
     restaurant_opening_hours_validator=restaurant_opening_hours_validator,
     image_set_validator=image_set_validator)
 restaurant_update_request_validator = validation.RestaurantUpdateRequestValidator(
     restaurant_name_validator=restaurant_name_validator,
     restaurant_description_validator=restaurant_description_validator,
-    restaurant_keywords_validator=restaurant_keywords_validator,
+    keywords_validator=keywords_validator,
     restaurant_address_validator=restaurant_address_validator,
     restaurant_opening_hours_validator=restaurant_opening_hours_validator,
     image_set_validator=image_set_validator)
@@ -48,6 +50,13 @@ menu_sections_creation_request_validator = validation.MenuSectionsCreationReques
 menu_section_update_request_validator = validation.MenuSectionUpdateRequestValidator(
     name_validator=restaurant_name_validator,
     description_validator=restaurant_description_validator)
+menu_items_creation_request_validator = validation.MenuItemsCreationRequestValidator(
+    id_validator=id_validator,
+    name_validator=restaurant_name_validator,
+    description_validator=restaurant_description_validator,
+    keywords_validator=keywords_validator,
+    ingredients_validator=ingredients_validator,
+    image_set_validator=image_set_validator)
 platforms_website_update_request_validator = validation.PlatformsWebsiteUpdateRequestValidator()
 platforms_callcenter_update_request_validator = \
     validation.PlatformsCallcenterUpdateRequestValidator()
@@ -74,6 +83,7 @@ menu_section_resource = inventory.MenuSectionResource(
     model=model)
 
 menu_items_resource = inventory.MenuItemsResource(
+    menu_items_creation_request_validator=menu_items_creation_request_validator,
     model=model)
 
 menu_item_resource = inventory.MenuItemResource(
