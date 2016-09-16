@@ -324,7 +324,33 @@ class Model(object):
 
     def create_menu_item(self, user_id, section_id, name, description, keywords,
                          ingredients, image_set):
-        pass
+        right_now = self._the_clock.now()
+        
+        with self._sql_engine.begin() as conn:
+            fetch_org = self._fetch_org(user_id, just_id=True)
+            
+            create_menu_item = _menu_item \
+                .insert() \
+                .returning(*_menu_item_columns) \
+                .values(
+                    org_id=fetch_org.as_scalar(),
+                    section_id=section_id,
+                    time_created=right_now,
+                    name=name,
+                    description=description,
+                    keywords=keywords,
+                    ingredients=ingredients,
+                    image_set=image_set)
+
+            result = conn.execute(create_menu_item)
+            menu_item_row = result.fetchone()
+            result.close()
+
+        if menu_item_row is None:
+            # Or item does not exist
+            raise OrgDoesNotExistError()
+
+        return _i2e(menu_item_row)
 
     def get_all_menu_items(self, user_id):
         pass
