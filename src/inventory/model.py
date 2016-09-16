@@ -292,7 +292,16 @@ class Model(object):
 
             result.close()
 
-        return _i2e(menu_section_row)
+            fetch_menu_items = self._fetch_menu_items_for_section(user_id, section_id)
+
+            result = conn.execute(fetch_menu_items)
+            menu_items_rows = result.fetchall()
+            result.close()
+
+        menu_section = _i2e(menu_section_row)
+        menu_section['menuItems'] = [_i2e(mi) for mi in menu_items_rows]
+
+        return menu_section
 
     def update_menu_section(self, user_id, section_id, **kwargs):
         with self._sql_engine.begin() as conn:
@@ -575,6 +584,18 @@ class Model(object):
             .where(sql.and_(
                 _org_user.c.user_id == user_id,
                 _menu_item.c.id == item_id,
+                _menu_item.c.time_archived == None))
+
+    @staticmethod
+    def _fetch_menu_items_for_section(user_id, section_id, just_id=False):
+        return sql \
+            .select([_menu_item.c.id] if just_id else _menu_item_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_menu_item, _menu_item.c.org_id == _org_user.c.org_id)) \
+            .where(sql.and_(
+                _org_user.c.user_id == user_id,
+                _menu_item.c.section_id == section_id,
                 _menu_item.c.time_archived == None))
 
     @staticmethod

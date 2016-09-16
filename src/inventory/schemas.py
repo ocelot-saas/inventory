@@ -166,34 +166,6 @@ RESTAURANT = {
 }
 
 
-MENU_SECTION = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'title': 'Menu section',
-    'description': 'Information about a menu section',
-    'type': 'object',
-    'properties': {
-        'id': {
-            'description': 'The unique id assigned to the menu section',
-            'type': 'integer'
-        },
-        'timeCreatedTs': {
-            'description': 'The time the menu section was created, in UTC',
-            'type': 'integer',
-        },
-        'name': {
-            'description': 'The name of the menu section',
-            'type': 'string'
-        },
-        'description': {
-            'description': 'The description of the menu section',
-            'type': 'string'
-        }
-    },
-    'required': ['id', 'timeCreatedTs', 'name', 'description'],
-    'additionalProperties': False
-}
-
-
 MENU_ITEM = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Menu item',
@@ -222,6 +194,39 @@ MENU_ITEM = {
     },
     'required': ['id', 'timeCreatedTs', 'name', 'description', 'keywords',
                  'ingredients', 'imageSet'],
+    'additionalProperties': False
+}
+
+
+MENU_SECTION = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu section',
+    'description': 'Information about a menu section',
+    'type': 'object',
+    'properties': {
+        'id': {
+            'description': 'The unique id assigned to the menu section',
+            'type': 'integer'
+        },
+        'timeCreatedTs': {
+            'description': 'The time the menu section was created, in UTC',
+            'type': 'integer',
+        },
+        'name': {
+            'description': 'The name of the menu section',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu section',
+            'type': 'string'
+        },
+        'menuItems': {
+            'description': 'The menu items for this section. Optional',
+            'type': 'array',
+            'items': MENU_ITEM
+        },
+    },
+    'required': ['id', 'timeCreatedTs', 'name', 'description'],
     'additionalProperties': False
 }
 
