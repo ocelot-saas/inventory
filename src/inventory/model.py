@@ -305,13 +305,13 @@ class Model(object):
 
     def update_menu_section(self, user_id, section_id, **kwargs):
         with self._sql_engine.begin() as conn:
-            find_menu_section = self._fetch_menu_section(user_id, section_id, True)
+            fetch_menu_section = self._fetch_menu_section(user_id, section_id, True)
 
             update_menu_section = _menu_section \
                 .update() \
                 .returning(*_menu_section_columns) \
                 .values(**_e2i(kwargs)) \
-                .where(_menu_section.c.id == find_menu_section.as_scalar())
+                .where(_menu_section.c.id == fetch_menu_section.as_scalar())
 
             result = conn.execute(update_menu_section)
             menu_section_row = result.fetchone()
@@ -321,18 +321,27 @@ class Model(object):
 
             result.close()
 
-        return _i2e(menu_section_row)
+            fetch_menu_items = self._fetch_menu_items_for_section(user_id, section_id)
+
+            result = conn.execute(fetch_menu_items)
+            menu_items_rows = result.fetchall()
+            result.close()
+
+        menu_section = _i2e(menu_section_row)
+        menu_section['menuItems'] = [_i2e(mi) for mi in menu_items_rows]
+
+        return menu_section
 
     def delete_menu_section(self, user_id, section_id):
         right_now = self._the_clock.now()
 
         with self._sql_engine.begin() as conn:
-            find_menu_section = self._fetch_menu_section(user_id, section_id, True)
+            fetch_menu_section = self._fetch_menu_section(user_id, section_id, True)
 
             update_menu_section = _menu_section \
                 .update() \
                 .values(time_archived=right_now) \
-                .where(_menu_section.c.id == find_menu_section.as_scalar())
+                .where(_menu_section.c.id == fetch_menu_section.as_scalar())
 
             result = conn.execute(update_menu_section)
             rowcount = result.rowcount
@@ -340,6 +349,16 @@ class Model(object):
             if rowcount != 1:
                 raise MenuSectionDoesNotExistError()
 
+            result.close()
+
+            fetch_menu_items = self._fetch_menu_items_for_section(user_id, section_id, True)
+
+            update_menu_items = _menu_item \
+                .update() \
+                .values(time_archived=right_now) \
+                .where(_menu_item.c.id.in_(fetch_menu_items))
+
+            result = conn.execute(update_menu_items)
             result.close()
 
     def create_menu_item(self, user_id, section_id, name, description, keywords,
