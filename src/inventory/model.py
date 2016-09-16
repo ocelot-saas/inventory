@@ -361,7 +361,21 @@ class Model(object):
         return _i2e(menu_item_row)
 
     def get_all_menu_items(self, user_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_menu_items = sql \
+                .select(_menu_item_columns) \
+                .select_from(_org_user
+                             .join(_org, _org.c.id == _org_user.c.org_id)
+                             .join(_menu_item, _menu_item.c.org_id == _org_user.c.org_id)) \
+                .where(sql.and_(
+                    _org_user.c.user_id == user_id,
+                    _menu_item.c.time_archived == None))
+
+            result = conn.execute(fetch_menu_items)
+            menu_items_rows = result.fetchall()
+            result.close()
+
+        return [_i2e(s) for s in menu_items_rows]
 
     def get_menu_item(self, user_id, item_id):
         pass
