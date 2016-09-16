@@ -523,6 +523,48 @@ MENU_ITEMS_RESPONSE = {
 }
 
 
+MENU_ITEM_UPDATE_REQUEST = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu item update request',
+    'description': 'Update request for a menu item',
+    'type': 'object',
+    'properties': {
+        'name': {
+            'description': 'The name of the menu item',
+            'type': 'string'
+        },
+        'description': {
+            'description': 'The description of the menu item',
+            'type': 'string'
+        },
+        'keywords': KEYWORDS,
+        'ingredients': INGREDIENTS,
+        'imageSet': IMAGE_SET
+    },
+    'anyOf': [
+        {'required': ['name']},
+        {'required': ['description']},
+        {'required': ['keywords']},
+        {'required': ['ingredients']},
+        {'required': ['imageSet']}
+    ],
+    'additionalProperties': False
+}
+
+
+MENU_ITEM_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Menu item response',
+    'description': 'Common response for menu item',
+    'type': 'object',
+    'properties': {
+        'menuItem': MENU_ITEM
+    },
+    'required': ['menuItem'],
+    'additionalProperties': False
+}
+
+
 PLATFORMS_WEBSITE_UPDATE_REQUEST = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Website platforms update request',

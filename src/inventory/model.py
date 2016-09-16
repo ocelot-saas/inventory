@@ -112,6 +112,10 @@ class MenuSectionDoesNotExistError(Error):
     pass
 
 
+class MenuItemDoesNotExistError(Error):
+    pass
+
+
 class Model(object):
     def __init__(self, the_clock, sql_engine):
         self._the_clock = the_clock
@@ -378,13 +382,57 @@ class Model(object):
         return [_i2e(s) for s in menu_items_rows]
 
     def get_menu_item(self, user_id, item_id):
-        pass
+        with self._sql_engine.begin() as conn:
+            fetch_menu_item = self._fetch_menu_item(user_id, item_id)
+
+            result = conn.execute(fetch_menu_item)
+            menu_item_row = result.fetchone()
+
+            if menu_item_row is None:
+                raise MenuItemDoesNotExistError()
+
+            result.close()
+
+        return _i2e(menu_item_row)
 
     def update_menu_item(self, user_id, item_id, **kwargs):
-        pass
+        with self._sql_engine.begin() as conn:
+            find_menu_item = self._fetch_menu_item(user_id, item_id, True)
+
+            update_menu_item = _menu_item \
+                .update() \
+                .returning(*_menu_item_columns) \
+                .values(**_e2i(kwargs)) \
+                .where(_menu_item.c.id == find_menu_item.as_scalar())
+
+            result = conn.execute(update_menu_item)
+            menu_item_row = result.fetchone()
+
+            if menu_item_row is None:
+                raise MenuItemDoesNotExistError()
+
+            result.close()
+
+        return _i2e(menu_item_row)
 
     def delete_menu_item(self, user_id, item_id):
-        pass
+        right_now = self._the_clock.now()
+
+        with self._sql_engine.begin() as conn:
+            find_menu_item = self._fetch_menu_item(user_id, item_id, True)
+
+            update_menu_item = _menu_item \
+                .update() \
+                .values(time_archived=right_now) \
+                .where(_menu_item.c.id == find_menu_item.as_scalar())
+
+            result = conn.execute(update_menu_item)
+            rowcount = result.rowcount
+
+            if rowcount != 1:
+                raise MenuItemDoesNotExistError()
+
+            result.close()
 
     def get_platforms_website(self, user_id):
         with self._sql_engine.begin() as conn:
@@ -516,6 +564,18 @@ class Model(object):
                 _org_user.c.user_id == user_id,
                 _menu_section.c.id == section_id,
                 _menu_section.c.time_archived == None))
+
+    @staticmethod
+    def _fetch_menu_item(user_id, item_id, just_id=False):
+        return sql \
+            .select([_menu_item.c.id] if just_id else _menu_item_columns) \
+            .select_from(_org_user
+                         .join(_org, _org.c.id == _org_user.c.org_id)
+                         .join(_menu_item, _menu_item.c.org_id == _org_user.c.org_id)) \
+            .where(sql.and_(
+                _org_user.c.user_id == user_id,
+                _menu_item.c.id == item_id,
+                _menu_item.c.time_archived == None))
 
     @staticmethod
     def _fetch_platforms_website(user_id, just_id=False):

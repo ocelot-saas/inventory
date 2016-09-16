@@ -14,14 +14,6 @@ import inventory.model as model
 import inventory.validation as validation
 
 
-auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
-cors_middleware = falcon_cors.CORS(
-    allow_origins_list=config.CLIENTS,
-    allow_headers_list=['Authorization', 'Content-Type'],
-    allow_all_methods=True).middleware
-
-app = falcon.API(middleware=[auth_middleware, cors_middleware])
-
 id_validator = validation.IdValidator()
 restaurant_name_validator = validation.RestaurantNameValidator()
 restaurant_description_validator = validation.RestaurantDescriptionValidator()
@@ -57,11 +49,19 @@ menu_items_creation_request_validator = validation.MenuItemsCreationRequestValid
     keywords_validator=keywords_validator,
     ingredients_validator=ingredients_validator,
     image_set_validator=image_set_validator)
+menu_item_update_request_validator = validation.MenuItemUpdateRequestValidator(
+    id_validator=id_validator,
+    name_validator=restaurant_name_validator,
+    description_validator=restaurant_description_validator,
+    keywords_validator=keywords_validator,
+    ingredients_validator=ingredients_validator,
+    image_set_validator=image_set_validator)
 platforms_website_update_request_validator = validation.PlatformsWebsiteUpdateRequestValidator()
 platforms_callcenter_update_request_validator = \
     validation.PlatformsCallcenterUpdateRequestValidator()
 platforms_emailcenter_update_request_validator = \
     validation.PlatformsEmailcenterUpdateRequestValidator()
+
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
 model = model.Model(the_clock, sql_engine)
@@ -87,6 +87,7 @@ menu_items_resource = inventory.MenuItemsResource(
     model=model)
 
 menu_item_resource = inventory.MenuItemResource(
+    menu_item_update_request_validator=menu_item_update_request_validator,
     model=model)
 
 platforms_website_resource = inventory.PlatformsWebsiteResource(
@@ -100,6 +101,14 @@ platforms_callcenter_resource = inventory.PlatformsCallcenterResource(
 platforms_emailcenter_resource = inventory.PlatformsEmailcenterResource(
     platforms_emailcenter_update_request_validator=platforms_emailcenter_update_request_validator,
     model=model)
+
+auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
+cors_middleware = falcon_cors.CORS(
+    allow_origins_list=config.CLIENTS,
+    allow_headers_list=['Authorization', 'Content-Type'],
+    allow_all_methods=True).middleware
+
+app = falcon.API(middleware=[auth_middleware, cors_middleware])
 
 app.add_route('/org', org_resource)
 app.add_route('/org/restaurant', restaurant_resource)

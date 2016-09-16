@@ -352,11 +352,11 @@ class MenuSectionUpdateRequestValidator(object):
                     self._description_validator = self._description_validator.validate(
                         menu_section_update_request['description'])
         except ValueError as e:
-            raise Error('Could not decode org creation request') from e
+            raise Error('Could not decode menu section update request') from e
         except jsonschema.ValidationError as e:
-            raise Error('Could not structurally validate menu section creation request') from e
+            raise Error('Could not structurally validate menu section update request') from e
         except Error as e:
-            raise Error('Could not validate menu section creation request') from e
+            raise Error('Could not validate menu section update request') from e
         except Exception as e:
             raise Error('Other error') from e
 
@@ -402,6 +402,58 @@ class MenuItemsCreationRequestValidator(object):
             raise Error('Other error') from e
 
         return menu_items_creation_request
+
+
+class MenuItemUpdateRequestValidator(object):
+    """Validator for a menu item update request."""
+
+    def __init__(self, id_validator, name_validator, description_validator,
+                 keywords_validator, ingredients_validator, image_set_validator):
+        self._id_validator = id_validator
+        self._name_validator = name_validator
+        self._description_validator = description_validator
+        self._keywords_validator = keywords_validator
+        self._ingredients_validator = ingredients_validator
+        self._image_set_validator = image_set_validator
+
+    def validate(self, menu_item_update_request_raw):
+        try:
+            menu_item_update_request = json.loads(menu_item_update_request_raw)
+            jsonschema.validate(
+                menu_item_update_request,
+                schemas.MENU_ITEM_UPDATE_REQUEST)
+
+            if 'name' in menu_item_update_request:
+                menu_item_update_request['name'] = \
+                    self._name_validator = self._name_validator.validate(
+                        menu_item_update_request['name'])
+
+            if 'description' in menu_item_update_request:
+                menu_item_update_request['description'] = \
+                    self._description_validator = self._description_validator.validate(
+                        menu_item_update_request['description'])
+
+            if 'keywords' in menu_item_update_request:
+                menu_item_update_request['keywords'] = \
+                    self._keywords_validator.validate(menu_item_update_request['keywords'])
+
+            if 'ingredients' in menu_item_update_request:
+                menu_item_update_request['ingredients'] = \
+                    self._ingredients_validator.validate(menu_item_update_request['ingredients'])
+
+            if 'imageSet' in menu_item_update_request:
+                menu_item_update_request['imageSet'] = \
+                    self._image_set_validator.validate(menu_item_update_request['imageSet'])
+        except ValueError as e:
+            raise Error('Could not decode menu item update request') from e
+        except jsonschema.ValidationError as e:
+            raise Error('Could not structurally validate menu item update request') from e
+        except Error as e:
+            raise Error('Could not validate menu item update request') from e
+        except Exception as e:
+            raise Error('Other error') from e
+
+        return menu_item_update_request
 
 
 class PlatformsWebsiteUpdateRequestValidator(object):

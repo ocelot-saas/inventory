@@ -192,7 +192,7 @@ class MenuSectionResource(object):
     def on_get(self, req, resp, section_id):
         """Get a particular menu section."""
 
-        section_id = self.validate_section_id(section_id)
+        section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
         try:
@@ -212,7 +212,7 @@ class MenuSectionResource(object):
     def on_put(self, req, resp, section_id):
         """Update a particular menu section."""
 
-        section_id = self.validate_section_id(section_id)
+        section_id = self._validate_section_id(section_id)
         user = req.context['user']
 
         try:
@@ -256,7 +256,7 @@ class MenuSectionResource(object):
         resp.status = falcon.HTTP_204
 
     @staticmethod
-    def validate_section_id(section_id):
+    def _validate_section_id(section_id):
         try:
             return int(section_id)
         except ValueError as e:
@@ -327,32 +327,84 @@ class MenuItemsResource(object):
 class MenuItemResource(object):
     """A item in the menu for an organization."""
 
-    def __init__(self, model):
+    def __init__(self, menu_item_update_request_validator, model):
+        self._menu_item_update_request_validator = menu_item_update_request_validator
         self._model = model
 
     def on_get(self, req, resp, item_id):
         """Get a particular menu item."""
 
+        item_id = self._validate_item_id(item_id)
         user = req.context['user']
 
+        try:
+            menu_item = self._model.get_menu_item(user['id'], item_id)
+        except model.MenuItemDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Item does not exist',
+                description='Item does not exist')
+
+        response = {'menuItem': menu_item}
+
+        jsonschema.validate(response, schemas.MENU_ITEM_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuItemResource'
+        resp.body = json.dumps(response)
 
     def on_put(self, req, resp, item_id):
         """Update a particular menu item."""
 
+        item_id = self._validate_item_id(item_id)
         user = req.context['user']
 
+        try:
+            menu_item_update_request_raw = req.stream.read().decode('utf-8')
+            menu_item_update_request = \
+                self._menu_item_update_request_validator.validate(
+                    menu_item_update_request_raw)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid menu item update data',
+                description='Invalid data "{}"'.format(menu_item_update_request_raw)) from e
+
+        try:
+            menu_item = self._model.update_menu_item(
+                user['id'], item_id, **menu_item_update_request)
+        except model.MenuItemDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Item does not exist',
+                description='Item does not exist')
+
+        response = {'menuItem': menu_item}
+
+        jsonschema.validate(response, schemas.MENU_ITEM_RESPONSE)
+
         resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuItemResource'
+        resp.body = json.dumps(response)
 
     def on_delete(self, req, resp, item_id):
         """Remove a particular menu item."""
 
+        item_id = self._validate_item_id(item_id)
         user = req.context['user']
 
-        resp.status = falcon.HTTP_200
-        resp.body = 'Hello MenuItemResource'
+        try:
+            self._model.delete_menu_item(user['id'], item_id)
+        except model.MenuItemDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Item does not exist',
+                description='Item does not exist')            
+
+        resp.status = falcon.HTTP_204
+
+    @staticmethod
+    def _validate_item_id(item_id):
+        try:
+            return int(item_id)
+        except ValueError as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid item id',
+                description='Invalid item id "{}"'.format(item_id)) from e
 
 
 class PlatformsWebsiteResource(object):
