@@ -56,7 +56,7 @@ class OrgResource(object):
 
         try:
             org = self._model.get_org(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist') from e
@@ -83,7 +83,7 @@ class RestaurantResource(object):
 
         try:
             restaurant = self._model.get_restaurant(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Restaurant does not exist',
                 description='Restaurant does not exist')
@@ -111,7 +111,7 @@ class RestaurantResource(object):
 
         try:
             restaurant = self._model.update_restaurant(user['id'], **restaurant_update_request)
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Restaurant does not exist',
                 description='Restaurant does not exist')
@@ -150,7 +150,7 @@ class MenuSectionsResource(object):
             menu_section = self._model.create_menu_section(
                 user['id'], menu_sections_creation_request['name'],
                 menu_sections_creation_request['description'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -169,7 +169,7 @@ class MenuSectionsResource(object):
 
         try:
             menu_sections = self._model.get_all_menu_sections(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -292,7 +292,7 @@ class MenuItemsResource(object):
                 user['id'], menu_items_creation_request['sectionId'], menu_items_creation_request['name'],
                 menu_items_creation_request['description'], menu_items_creation_request['keywords'],
                 menu_items_creation_request['ingredients'], menu_items_creation_request['imageSet'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -311,7 +311,7 @@ class MenuItemsResource(object):
 
         try:
             menu_items = self._model.get_all_menu_items(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Org does not exist',
                 description='Org does not exist')
@@ -422,7 +422,7 @@ class PlatformsWebsiteResource(object):
 
         try:
             platforms_website = self._model.get_platforms_website(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Website does not exist',
                 description='Website does not exist') from e
@@ -451,7 +451,7 @@ class PlatformsWebsiteResource(object):
 
         try:
             platforms_website = self._model.update_platforms_website(user['id'], **platforms_website_update_request)
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Website does not exist',
                 description='Website does not exist')
@@ -481,7 +481,7 @@ class PlatformsCallcenterResource(object):
 
         try:
             platforms_callcenter = self._model.get_platforms_callcenter(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Callcenter does not exist',
                 description='Callcenter does not exist') from e
@@ -510,7 +510,7 @@ class PlatformsCallcenterResource(object):
 
         try:
             platforms_callcenter = self._model.update_platforms_callcenter(user['id'], **platforms_callcenter_update_request)
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Callcenter does not exist',
                 description='Callcenter does not exist')
@@ -540,7 +540,7 @@ class PlatformsEmailcenterResource(object):
 
         try:
             platforms_emailcenter = self._model.get_platforms_emailcenter(user['id'])
-        except model.OrgDoesNotExist as e:
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Emailcenter does not exist',
                 description='Emailcenter does not exist') from e
@@ -568,8 +568,9 @@ class PlatformsEmailcenterResource(object):
                 description='Invalid data "{}"'.format(platforms_emailcenter_update_request_raw)) from e
 
         try:
-            platforms_emailcenter = self._model.update_platforms_emailcenter(user['id'], **platforms_emailcenter_update_request)
-        except model.OrgDoesNotExist as e:
+            platforms_emailcenter = self._model.update_platforms_emailcenter(
+                user['id'], **platforms_emailcenter_update_request)
+        except model.OrgDoesNotExistError as e:
             raise falcon.HTTPNotFound(
                 title='Emailcenter does not exist',
                 description='Emailcenter does not exist')

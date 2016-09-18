@@ -104,7 +104,7 @@ class OrgAlreadyExistsError(Error):
     pass
 
 
-class OrgDoesNotExist(Error):
+class OrgDoesNotExistError(Error):
     pass
 
 
