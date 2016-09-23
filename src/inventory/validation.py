@@ -312,9 +312,9 @@ class MenuSectionsCreationRequestValidator(object):
                 schemas.MENU_SECTIONS_CREATION_REQUEST)
 
             menu_sections_creation_request['name'] = \
-                self._name_validator = self._name_validator.validate(menu_sections_creation_request['name'])
+                self._name_validator.validate(menu_sections_creation_request['name'])
             menu_sections_creation_request['description'] = \
-                self._description_validator = self._description_validator.validate(
+                self._description_validator.validate(
                     menu_sections_creation_request['description'])
         except ValueError as e:
             raise Error('Could not decode org creation request') from e
@@ -344,13 +344,11 @@ class MenuSectionUpdateRequestValidator(object):
 
             if 'name' in menu_section_update_request:
                 menu_section_update_request['name'] = \
-                    self._name_validator = self._name_validator.validate(
-                        menu_section_update_request['name'])
+                    self._name_validator.validate(menu_section_update_request['name'])
 
             if 'description' in menu_section_update_request:
                 menu_section_update_request['description'] = \
-                    self._description_validator = self._description_validator.validate(
-                        menu_section_update_request['description'])
+                    self._description_validator.validate(menu_section_update_request['description'])
         except ValueError as e:
             raise Error('Could not decode menu section update request') from e
         except jsonschema.ValidationError as e:
@@ -425,13 +423,11 @@ class MenuItemUpdateRequestValidator(object):
 
             if 'name' in menu_item_update_request:
                 menu_item_update_request['name'] = \
-                    self._name_validator = self._name_validator.validate(
-                        menu_item_update_request['name'])
+                    self._name_validator.validate(menu_item_update_request['name'])
 
             if 'description' in menu_item_update_request:
                 menu_item_update_request['description'] = \
-                    self._description_validator = self._description_validator.validate(
-                        menu_item_update_request['description'])
+                    self._description_validator.validate(menu_item_update_request['description'])
 
             if 'keywords' in menu_item_update_request:
                 menu_item_update_request['keywords'] = \
