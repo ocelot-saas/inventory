@@ -6,14 +6,14 @@ MAINTAINER Horia Coman <horia141@gmail.com>
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
+            build-essential \
             libffi-dev \
 	        libpq-dev \
             libssl-dev \
             python3 \
             python3-dev \
             python3-pip \
-            python3-setuptools \
-            build-essential && \
+            python3-setuptools && \
     apt-get clean
 
 # Setup directory structure.
