@@ -8,7 +8,7 @@ RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
             build-essential \
             libffi-dev \
-	        libpq-dev \
+            libpq-dev \
             libssl-dev \
             python3 \
             python3-dev \
