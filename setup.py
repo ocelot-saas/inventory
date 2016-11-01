@@ -16,7 +16,7 @@ def readme():
 
 setup(
     name='inventory',
-    version='0.7.1',
+    version='0.7.2',
     description='The inventory service for Ocelot, as a Python package.',
     long_description=readme(),
     keywords='ocelot inventory service rest api',
@@ -28,7 +28,7 @@ setup(
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     install_requires=[
-        # Duplicated from requirements.txt.
+        # Duplicated from requirements.txt file.
         'clock==0.0.5',
         'falcon>=1,<2',
         'falcon-cors>=1,<2',
