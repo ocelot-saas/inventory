@@ -14,6 +14,11 @@ import inventory.model as model
 import inventory.validation as validation
 
 
+def debug_error_handler(ex, req, resp, params):
+    print(ex)
+    raise ex
+
+
 id_validator = validation.IdValidator()
 restaurant_name_validator = validation.RestaurantNameValidator()
 restaurant_description_validator = validation.RestaurantDescriptionValidator()
@@ -109,6 +114,9 @@ cors_middleware = falcon_cors.CORS(
     allow_all_methods=True).middleware
 
 app = falcon.API(middleware=[auth_middleware, cors_middleware])
+
+if config.ENV != 'PROD':
+    app.add_error_handler(Exception, handler=debug_error_handler)
 
 app.add_route('/org', org_resource)
 app.add_route('/org/restaurant', restaurant_resource)
