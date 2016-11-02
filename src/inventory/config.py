@@ -13,7 +13,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 CLIENTS = ['http://{}'.format(c) for c in os.getenv('CLIENTS').split(',')]
 
 if ENV == 'LOCAL':
-    with open('/ocelot/var/secrets.json') as f:
+    with open('/ocelot-saas/var/secrets.json') as f:
         secrets = json.load(f)
 else:
     pass

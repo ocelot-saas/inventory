@@ -18,39 +18,39 @@ RUN apt-get update -y && \
 
 # Setup directory structure.
 
-RUN mkdir /ocelot
-RUN mkdir /ocelot/pack
-RUN mkdir /ocelot/var
+RUN mkdir /ocelot-saas
+RUN mkdir /ocelot-saas/pack
+RUN mkdir /ocelot-saas/var
 
 # Setup users and groups.
 
-RUN groupadd ocelot && \
-    useradd -ms /bin/bash -g ocelot ocelot
+RUN groupadd ocelot-saas && \
+    useradd -ms /bin/bash -g ocelot-saas ocelot-saas
 
 # Install package requirements.
 
-COPY requirements.txt /ocelot/pack/requirements.txt
-RUN cd /ocelot/pack && pip3 install -r requirements.txt
+COPY requirements.txt /ocelot-saas/pack/requirements.txt
+RUN cd /ocelot-saas/pack && pip3 install -r requirements.txt
 
 # Copy source code.
 
-COPY . /ocelot/pack
+COPY . /ocelot-saas/pack
 
 # Setup the runtime environment for the application.
 
 ENV ENV LOCAL
 ENV ADDRESS 0.0.0.0
 ENV PORT 10000
-ENV MIGRATIONS_PATH /ocelot/pack/migrations
-ENV IDENTITY_SERVICE_DOMAIN ocelot-identity:10000
-ENV DATABASE_URL postgresql://ocelot:ocelot@ocelot-postgres:5432/ocelot
+ENV MIGRATIONS_PATH /ocelot-saas/pack/migrations
+ENV IDENTITY_SERVICE_DOMAIN ocelot-saas-identity:10000
+ENV DATABASE_URL postgresql://ocelot-saas:ocelot-saas@ocelot-saas-postgres:5432/ocelot-saas
 ENV CLIENTS localhost:10000
-ENV PYTHONPATH /ocelot/pack/src
+ENV PYTHONPATH /ocelot-saas/pack/src
 
-RUN chown -R ocelot:ocelot /ocelot
-VOLUME ["/ocelot/pack/src"]
-VOLUME ["/ocelot/var/secrets.json"]
-WORKDIR /ocelot/pack/src
+RUN chown -R ocelot-saas:ocelot-saas /ocelot-saas
+VOLUME ["/ocelot-saas/pack/src"]
+VOLUME ["/ocelot-saas/var/secrets.json"]
+WORKDIR /ocelot-saas/pack/src
 EXPOSE 10000
-USER ocelot
+USER ocelot-saas
 ENTRYPOINT ["gunicorn", "--config", "inventory/config.py", "inventory.server:app"]

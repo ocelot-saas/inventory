@@ -16,10 +16,10 @@ def readme():
 
 setup(
     name='inventory',
-    version='0.8.0',
+    version='0.8.1',
     description='The inventory service for Ocelot, as a Python package.',
     long_description=readme(),
-    keywords='ocelot inventory service rest api',
+    keywords='ocelot-saas inventory service rest api',
     url='http://github.com/ocelot-saas/inventory',
     author='Horia Coman',
     author_email='horia141@gmail.com',
@@ -33,7 +33,7 @@ setup(
         'falcon>=1,<2',
         'falcon-cors>=1,<2',
         'gunicorn>=19,<20',
-        'identity==1.2.0',
+        'identity==1.2.1',
         'inflection>=0,<1',
         'jsonschema>=2,<3',
         'phonenumbers>=7,<8',
