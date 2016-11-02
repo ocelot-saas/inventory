@@ -49,6 +49,7 @@ ENV PYTHONPATH /ocelot/pack/src
 
 RUN chown -R ocelot:ocelot /ocelot
 VOLUME ["/ocelot/pack/src"]
+VOLUME ["/ocelot/var/secrets.json"]
 WORKDIR /ocelot/pack/src
 EXPOSE 10000
 USER ocelot
