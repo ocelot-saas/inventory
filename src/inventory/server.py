@@ -6,6 +6,7 @@ import clock
 import falcon
 import falcon_cors
 import sqlalchemy
+import startup_migrations
 
 import identity.client as identity
 import inventory.config as config
@@ -17,6 +18,9 @@ import inventory.validation as validation
 def debug_error_handler(ex, req, resp, params):
     print(ex)
     raise ex
+
+
+startup_migrations.migrate(config.DATABASE_URL, config.MIGRATIONS_PATH)
 
 
 id_validator = validation.IdValidator()
