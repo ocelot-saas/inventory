@@ -36,7 +36,7 @@ setup(
         'identity==1.3.1',
         'inflection>=0,<1',
         'jsonschema>=2,<3',
-        'phonenumbers>=7,<8'
+        'phonenumbers>=7,<8',
         'python-slugify>=1,<2',
         'pytz==2016.4',
         'sqlalchemy>=1,<2',
