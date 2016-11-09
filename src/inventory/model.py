@@ -204,6 +204,7 @@ class Model(object):
 
         return _i2e(org_row)
 
+
     def get_restaurant(self, user_id):
         with self._sql_engine.begin() as conn:
             fetch_restaurant = self._fetch_restaurant(user_id)
@@ -563,6 +564,12 @@ class Model(object):
             result.close()
 
         return _i2e(platforms_emailcenter_row)
+
+    def get_webshop_info(self, host):
+        with self._sql_engine.begin() as conn:
+            pass
+
+        return _i2e({})
 
     @staticmethod
     def _fetch_org(user_id, just_id=False):

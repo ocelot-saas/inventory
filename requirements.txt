@@ -5,7 +5,7 @@ clock==0.0.5
 falcon>=1,<2
 falcon-cors>=1,<2
 gunicorn>=19,<20
-identity==1.2.1
+identity==1.4.3
 inflection>=0,<1
 jsonschema>=2,<3
 phonenumbers>=7,<8

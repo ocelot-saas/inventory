@@ -583,3 +583,23 @@ class PlatformsEmailcenterResource(object):
 
         resp.status = falcon.HTTP_200
         resp.body = json.dumps(response)
+
+
+class WebshopInfoResource(object):
+    """The source of information for the webshop."""
+
+    AUTH_NOT_REQUIRED = True
+
+    def __init__(self, model):
+        self._model = model
+
+
+    def on_get(self, req, resp):
+        webshop_info = self._model.get_webshop_info('')
+
+        response = {'webshopInfo': webshop_info}
+
+        jsonschema.validate(response, schemas.WEBSHOP_INFO_RESPONSE)
+        
+        resp.status = falcon.HTTP_200
+        resp.body = json.dumps(response)

@@ -111,6 +111,9 @@ platforms_emailcenter_resource = inventory.PlatformsEmailcenterResource(
     platforms_emailcenter_update_request_validator=platforms_emailcenter_update_request_validator,
     model=model)
 
+webshop_info_resource = inventory.WebshopInfoResource(
+    model=model)
+
 auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)
 cors_middleware = falcon_cors.CORS(
     allow_origins_list=config.CLIENTS,
@@ -131,6 +134,7 @@ app.add_route('/org/menu/items/{item_id}', menu_item_resource)
 app.add_route('/org/platforms/website', platforms_website_resource)
 app.add_route('/org/platforms/callcenter', platforms_callcenter_resource)
 app.add_route('/org/platforms/emailcenter', platforms_emailcenter_resource)
+app.add_route('/webshop', webshop_info_resource)
 
 
 def main():

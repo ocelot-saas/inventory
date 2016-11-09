@@ -323,6 +323,16 @@ ORG = {
 }
 
 
+WEBSHOP_INFO = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Webshop info',
+    'description': 'All info needed by a shop',
+    'type': 'object',
+    'properties': {},
+    'additionalProperties': False
+}
+
+
 ORG_CREATION_REQUEST = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'title': 'Org creation request',
@@ -659,5 +669,18 @@ PLATFORMS_EMAILCENTER_RESPONSE = {
         'platformsEmailcenter': PLATFORMS_EMAILCENTER
     },
     'required': ['platformsEmailcenter'],
+    'additionalProperties': False
+}
+
+
+WEBSHOP_INFO_RESPONSE = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'title': 'Webshop info response',
+    'description': 'Response for all info needed by a shop',
+    'type': 'object',
+    'properties': {
+        'webshopInfo': WEBSHOP_INFO
+    },
+    'required': ['webshopInfo'],
     'additionalProperties': False
 }
