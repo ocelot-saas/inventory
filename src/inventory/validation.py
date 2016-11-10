@@ -2,12 +2,14 @@
 
 import datetime
 import json
+import re
 
 import jsonschema
 import phonenumbers
 import slugify
 import validate_email
 
+import inventory.config as config
 import inventory.schemas as schemas
 
 
@@ -471,10 +473,10 @@ class PlatformsWebsiteUpdateRequestValidator(object):
                 subdomain = platforms_website_update_request['subdomain']
 
                 if len(subdomain) > self.MAX_DOMAIN_SIZE:
-                    raise Error('Subdomain is too long'.format(subdomain))
+                    raise Error('Subdomain "{}" is too long'.format(subdomain))
 
                 if not subdomain == slugify.slugify(subdomain):
-                    raise Error('Subdomain {} is not valid'.format(subdomain))
+                    raise Error('Subdomain "{}" is not valid'.format(subdomain))
         except ValueError as e:
             raise Error('Could not decode website update request') from e
         except jsonschema.ValidationError as e:
@@ -554,3 +556,29 @@ class PlatformsEmailcenterUpdateRequestValidator(object):
             raise Error('Other error') from e
 
         return platforms_emailcenter_update_request
+
+
+class HostToSubdomainValidator(object):
+    """Validator for the host header which produces the subdomain part."""
+
+    MAX_DOMAIN_SIZE = 100
+    SUBDOMAIN_RE = re.compile(r'^([^.]+)[.]{}$'.format(config.MASTER_DOMAIN))
+
+    def __init__(self):
+        pass
+
+    def validate(self, host):
+        match = self.SUBDOMAIN_RE.match(host)
+
+        if match is None:
+            raise Error('Host "{}" is not a valid domain'.format(host))
+
+        subdomain = match.group(1)
+
+        if len(subdomain) > self.MAX_DOMAIN_SIZE:
+            raise Error('Subdomain "{}" is too long'.format(subdomain))
+
+        if not subdomain == slugify.slugify(subdomain):
+            raise Error('Subdomain "{}" is not valid'.format(subdomain))
+
+        return subdomain

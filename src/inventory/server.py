@@ -70,6 +70,8 @@ platforms_callcenter_update_request_validator = \
     validation.PlatformsCallcenterUpdateRequestValidator()
 platforms_emailcenter_update_request_validator = \
     validation.PlatformsEmailcenterUpdateRequestValidator()
+host_to_subdomain_validator = \
+    validation.HostToSubdomainValidator()
 
 the_clock = clock.Clock()
 sql_engine = sqlalchemy.create_engine(config.DATABASE_URL, echo=True)
@@ -112,6 +114,7 @@ platforms_emailcenter_resource = inventory.PlatformsEmailcenterResource(
     model=model)
 
 webshop_info_resource = inventory.WebshopInfoResource(
+    host_to_subdomain_validator=host_to_subdomain_validator,
     model=model)
 
 auth_middleware = identity.AuthMiddleware(config.IDENTITY_SERVICE_DOMAIN)

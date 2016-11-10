@@ -590,12 +590,22 @@ class WebshopInfoResource(object):
 
     AUTH_NOT_REQUIRED = True
 
-    def __init__(self, model):
+    def __init__(self, host_to_subdomain_validator, model):
+        self._host_to_subdomain_validator = host_to_subdomain_validator
         self._model = model
 
 
     def on_get(self, req, resp):
-        webshop_info = self._model.get_webshop_info('')
+        """Retrieve all information needed by a webshop."""
+
+        try:
+            subdomain = self._host_to_subdomain_validator.validate(req.host)
+        except validation.Error as e:
+            raise falcon.HTTPBadRequest(
+                title='Invalid host header',
+                description='Invalid host header "{}"'.format(req.host)) from e
+
+        webshop_info = self._model.get_webshop_info(subdomain)
 
         response = {'webshopInfo': webshop_info}
 

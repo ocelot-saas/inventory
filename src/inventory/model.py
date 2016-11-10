@@ -565,7 +565,7 @@ class Model(object):
 
         return _i2e(platforms_emailcenter_row)
 
-    def get_webshop_info(self, host):
+    def get_webshop_info(self, subdomain):
         with self._sql_engine.begin() as conn:
             pass
 

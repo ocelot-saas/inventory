@@ -7,6 +7,7 @@ import os
 ENV = os.getenv('ENV')
 ADDRESS = os.getenv('ADDRESS')
 PORT = os.getenv('PORT')
+MASTER_DOMAIN = os.getenv('MASTER_DOMAIN')
 IDENTITY_SERVICE_DOMAIN = os.getenv('IDENTITY_SERVICE_DOMAIN')
 MIGRATIONS_PATH = os.getenv('MIGRATIONS_PATH')
 DATABASE_URL = os.getenv('DATABASE_URL')
