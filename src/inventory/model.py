@@ -567,9 +567,20 @@ class Model(object):
 
     def get_webshop_info(self, subdomain):
         with self._sql_engine.begin() as conn:
-            pass
+            # TODO(horia141): Filter for archivedness etc.
+            fetch_org_by_subdomain = sql \
+                .select(_org_columns) \
+                .select_from(_org.join(_platforms_website, _org.c.id == _platforms_website.c.org_id)) \
+                .where(_platforms_website.c.subdomain == subdomain)
 
-        return _i2e({})
+            result = conn.execute(fetch_org_by_subdomain)
+            org_row = result.fetchone()
+            result.close()
+
+            if org_row is None:
+                raise OrgDoesNotExistError()
+
+        return _i2e(org_row)
 
     @staticmethod
     def _fetch_org(user_id, just_id=False):

@@ -605,7 +605,12 @@ class WebshopInfoResource(object):
                 title='Invalid host header',
                 description='Invalid host header "{}"'.format(req.host)) from e
 
-        webshop_info = self._model.get_webshop_info(subdomain)
+        try:
+            webshop_info = self._model.get_webshop_info(subdomain)
+        except model.OrgDoesNotExistError as e:
+            raise falcon.HTTPNotFound(
+                title='Webshop does not exist',
+                description= 'Webshop does not exist') from e
 
         response = {'webshopInfo': webshop_info}
 

@@ -329,7 +329,8 @@ WEBSHOP_INFO = {
     'description': 'All info needed by a shop',
     'type': 'object',
     'properties': {},
-    'additionalProperties': False
+    # 'required': [], # For now
+    'additionalProperties': True # For now
 }
 
 
