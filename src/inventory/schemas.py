@@ -220,10 +220,13 @@ MENU_SECTION = {
             'description': 'The description of the menu section',
             'type': 'string'
         },
-        'menuItems': {
+        'items': {
             'description': 'The menu items for this section. Optional',
-            'type': 'array',
-            'items': MENU_ITEM
+            'type': 'object',
+            'patternProperties': {
+                '^[0-9]+': MENU_ITEM
+            },
+            'additionalProperties': False
         },
     },
     'required': ['id', 'timeCreatedTs', 'name', 'description'],
@@ -328,9 +331,41 @@ WEBSHOP_INFO = {
     'title': 'Webshop info',
     'description': 'All info needed by a shop',
     'type': 'object',
-    'properties': {},
-    # 'required': [], # For now
-    'additionalProperties': True # For now
+    'properties': {
+        'general': RESTAURANT,
+        'menu': {
+            'title': 'Menu',
+            'description': 'Menu',
+            'type': 'object',
+            'properties': {
+                'sections': {
+                    'title': 'Menu sections',
+                    'description': 'Menu sections',
+                    'type': 'object',
+                    'patternProperties': {
+                        '^[0-9]+': MENU_SECTION
+                    },
+                    'additionalProperties': False
+                },
+            },
+            'required': ['sections'],
+            'additionalProperties': False
+        },
+        'platforms': {
+            'title': 'Menu sections',
+            'description': 'Platforms section',
+            'type': 'object',
+            'properties': {
+                'website': PLATFORMS_WEBSITE,
+                'callcenter': PLATFORMS_CALLCENTER,
+                'emailcenter': PLATFORMS_EMAILCENTER
+            },
+            'required': ['website', 'callcenter', 'emailcenter'],
+            'additionalProperties': False
+        }
+    },
+    'required': ['general', 'menu', 'platforms'],
+    'additionalProperties': False
 }
 
 
